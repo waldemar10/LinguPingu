@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css?family=Poppins');
+
+body {
+  background-color: #1a1a1a;
+  color:whitesmoke;
+  margin: 0;
+  padding: 0;
+  height: '100vh';
+  font-family: "Poppins";
+  
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+

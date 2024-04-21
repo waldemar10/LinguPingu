@@ -1,0 +1,5 @@
+Die Logos:
+favicon.ico
+logo192.png
+logo512.png
+Sind alles DummyLogos, sollten später durch richtige ersetzt werden.

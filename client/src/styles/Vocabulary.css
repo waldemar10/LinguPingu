@@ -1,0 +1,22 @@
+
+.responsive-width{
+    width: 50%;
+}
+.responsive-width-card{
+    max-width: 20%;
+}
+@media only screen and (max-width: 688px) {
+    .responsive-column{
+        flex-direction: column;
+    }
+    .responsive-width{
+        width: 85%;
+    }
+    .responsive-width-newCollection{
+        width: 85%;
+    }
+    .responsive-width-card{
+        width: 85%;
+        max-width: 85%;
+    }
+  }

@@ -1,0 +1,21 @@
+.headLine {
+    font-size: 72px;
+    font-weight: bold;
+}
+
+.gameContainer {
+    text-align: center;
+}
+
+.gameContainer p {
+    font-size: 26px;
+}
+
+.wordHighlight {
+    color: #63CBFB;
+    font-size: 48px;
+}
+
+.timer {
+    font-size: 48px !important;
+}

@@ -1,0 +1,59 @@
+{
+    "landing": {
+        "welcome":"Willkommen bei LinguPingu",
+        "slogan": "Lern das Unmögliche!"
+    },
+    "home": {
+        "registerButton":"Konto erstellen",
+        "loginButton": "Ich habe schon ein Konto"
+    },
+    "timeAttack": {
+        "slogan": "Geh auf eine Abenteuer mit den Punguinen. Die Zeit läuft, watschle zum Sieg!"
+    },
+    "vocabulary": {
+        "title": "Vokabeln",
+        "slogan": "Entdecke, Gestalte, Bearbeite – Individualisiere deine Sprachreise mit vorhandenen oder selbst erstellten Vokabeln!",
+        "learn": "Lernen",
+        "editCollection": "Sammlung bearbeiten",
+        "createCollection": "Sammlung erstellen",
+        "editCard": "Karten bearbeiten",
+        "createCard": "Karten erstellen"
+    },
+    "learn": {
+        "title": "Lernen",
+        "slogan": "Entdecke vorhandene Vokabeln!"
+    },
+    "editCollection": {
+        "title": "Sammlung bearbeiten",
+        "slogan": "Bearbeite deine Sammlungen"
+    },
+    "createCollection": {
+        "title" : "Sammlung erstellen",
+        "slogan": "Erstelle Sammlungen mit vorhandenen Vokabeln"
+    },
+    "editCard": {
+        "title": "Karten bearbeiten",
+        "slogan": "Bearbeite deine Vokabel Karten"
+    },
+    "createCard": {
+        "title" : "Karten erstellen",
+        "slogan": "Erstelle Vokabeln, um deine Sammlungen zu erweitern"
+    }, 
+    "navbar": {
+        "vocabulary": "Vokabeln",
+        "grammar": "Grammatik",
+        "games": "Spiele",
+        "welcome": "Willkommen",
+        "profile": "Profil",
+        "settings": "Einstellungen"
+    },
+    "settings": {
+        "headline": "Einstellungen",
+        "nativeLang": "Muttersprache",
+        "learningLang": "Lernende Sprache",
+        "country": "Land",
+        "bio": "Biografie",
+        "userName": "Benutzername",
+        "save": "Speichern"
+    }
+}

@@ -1,0 +1,12 @@
+.navbar-img {
+  height: 100%;
+  object-fit: contain; 
+}
+
+.navbar-h-60 {
+  height: 60px;
+}
+
+.dropdown-custom {
+  height: 100%;
+}

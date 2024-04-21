@@ -1,0 +1,16 @@
+{
+    "backToGames": "Back to Games",
+    "submit": "submit",
+    "skip":"skip",
+    "end": "End Game",
+    
+    "timeAttack": {
+        "timeleft": "Time left",
+        "correct": "Correct",
+        "word": "Word",
+        "translateP1": "Translate",
+        "translateP2": "to",
+        "cardsLeft": "Remaining Cards",
+        "placeholder": "Enter Translation"
+    }
+}
