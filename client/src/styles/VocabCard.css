@@ -1,0 +1,33 @@
+.card-container-vocab {
+    position: relative;
+    height: 80vh;
+    overflow: hidden
+  }
+
+.card-container-small {
+  position: relative;
+  height: fit-content;
+  overflow-y: auto;
+  display: flex
+}
+  
+.swipable-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+.collection-name {
+  font-size: x-large;
+}
+
+.card-text-small {
+  font-size: 25px;
+}
+
+.newCollection-container {
+  width: 400px;
+  height: 500px;
+  background-color: #F9F9F9;
+}

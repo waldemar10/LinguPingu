@@ -1,0 +1,16 @@
+{
+    "backToGames": "Zurück zu den Spielen",
+    "submit": "Abschicken",
+    "skip":"Überspringen",
+    "end": "Spiel beenden",
+
+    "timeAttack": {
+        "timeleft": "Übrige Zeit",
+        "correct": "Richtig",
+        "word": "Wort",
+        "translateP1": "Übersetze",
+        "translateP2": "in",
+        "cardsLeft": "Übrige Karten",
+        "placeholder": "Übersetzung eingben"
+    }
+}

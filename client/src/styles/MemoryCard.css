@@ -1,0 +1,41 @@
+.card-container {
+    position: relative;
+    height: 25vh;
+    overflow: hidden
+  }
+
+  .card-container-small {
+    position: relative;
+    height: fit-content;
+    overflow-y: auto;
+    display: flex
+  }
+
+  .collection-name {
+    font-size: x-large;
+  }
+
+  .card-text-small {
+    font-size: 25px;
+  }
+
+  .newCollection-container {
+    width: 400px;
+    height: 500px;
+    background-color: #F9F9F9;
+  }
+
+  .wrong {
+    animation: wrongAnswerAnimation 1s ease-in-out, wiggeln 1s ease-in-out;
+  }
+  @keyframes wrongAnswerAnimation {
+    0% {
+      box-shadow: 0 0 10px 10px rgba(255, 0, 0, 0.8);
+    }
+    75%{
+      box-shadow: 0 0 10px 10px rgba(255, 0, 0, 0.4);
+    }
+    100% {
+      box-shadow: 0 0 0 rgba(255, 0, 0, 0);
+    }
+  }

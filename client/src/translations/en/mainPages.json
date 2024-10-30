@@ -1,0 +1,59 @@
+{
+    "landing": {
+        "welcome":"Welcome to LinguPingu",
+        "slogan": "Lern the impossible!"
+    },
+    "home": {
+        "registerButton":"Create Account",
+        "loginButton": "Sign In"
+    },
+    "timeAttack": {
+        "slogan": "Gon on a vocabulary adventure with the penguins! Time is ticking, waddle towards success!"
+    },
+    "vocabulary": {
+        "title": "Vocabulary",
+        "slogan": "Explore, Create, Edit – Personalize your language journey with existing or custom vocabularies!",
+        "learn": "Learn",
+        "editCollection": "Edit Collection",
+        "createCollection": "Create Collection",
+        "editCard": "Edit Card",
+        "createCard": "Create Card"
+    },
+    "learn": {
+        "title": "Learn",
+        "slogan": "Explore existing vocabularies!"
+    },
+    "editCollection": {
+        "title": "Edit Collection",
+        "slogan": "Edit your created Collections"
+    },
+    "createCollection": {
+        "title" : "Create Collection",
+        "slogan": "Create your own Collections using existing vocabularies"
+    },
+    "editCard": {
+        "title": "Edit Cards",
+        "slogan": "Edit your created Vocabulary Cards"
+    },
+    "createCard": {
+        "title" : "Create Cards",
+        "slogan": "Create your own vocabulary to build your Collection"
+    },
+    "navbar": {
+        "vocabulary": "Vocabulary",
+        "grammar": "Grammar",
+        "games": "Games",
+        "welcome": "Welcome",
+        "profile": "Profile",
+        "settings": "Settings"
+    },
+    "settings": {
+        "headline": "Settings",
+        "nativeLang": "Native Language",
+        "learningLang": "Learning Language",
+        "country": "Country",
+        "bio": "Biography",
+        "userName": "User Name",
+        "save": "Save"
+    }
+}

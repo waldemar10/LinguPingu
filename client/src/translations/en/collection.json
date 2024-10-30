@@ -1,0 +1,28 @@
+{
+    "back": "Back",
+    "card": {
+        "revealButton": "Reveal answer"
+    },
+    "collection": {
+        "startButton": "Start collection",
+        "endButton": "Finish collection",
+        "restart": "Restart collection",
+        "restartGood": "Restart with passed cards",
+        "restartBad": "Restart with failed cards",
+        "chartTitle": "Sumamry",
+        "legendGood": "I knew",
+        "legendBad": "I didn't know"
+    },
+    "filterCollection": {
+        "all": "All Collections",
+        "your": "Your Collections",
+        "pingu": "PinguLingu's Collections",
+        "otherUser": "Other Users' Collections"
+    },
+    "filterVocabulary": {
+        "all": "All Cards",
+        "your": "Your Cards",
+        "pingu": "PinguLingu's Cards",
+        "otherUser": "Other Users' Cards"
+    }
+}

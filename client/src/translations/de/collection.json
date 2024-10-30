@@ -1,0 +1,28 @@
+{
+    "back": "Zurück",
+    "card": {
+        "revealButton": "Antwort Anzeigen"
+    },
+    "collection": {
+        "startButton": "Beginne Sammlung",
+        "endButton": "Sammlung Beenden",
+        "restart": "Neu starten",
+        "restartGood": "Mit geschafften Karten neu starten",
+        "restartBad": "Mit nicht geschafften Karten neu starten",
+        "chartTitle": "Zusammenfassung",
+        "legendGood": "Kannte ich",
+        "legendBad": "Kannte ich nicht"
+    },
+    "filterCollection": {
+        "all": "Alle Sammlungen",
+        "your": "Deine Sammlungen",
+        "pingu": "Sammlungen von PinguLingu",
+        "otherUser": "Sammlungen anderer Nutzer"
+    },
+    "filterVocabulary": {
+        "all": "Alle Karten",
+        "your": "Deine Karten",
+        "pingu": "Karten von PinguLingu",
+        "otherUser": "Karten anderer Nutzer"
+    }
+}

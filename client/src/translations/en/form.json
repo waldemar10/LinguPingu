@@ -1,0 +1,75 @@
+{
+    "userName": "Username",
+    "password": "Password",
+    "preview": "Preview",
+    "endPreview": "Finish Preview",
+    
+    "registration": {
+        "username": "Username",
+        "email": "E-Mail-Address",
+        "password": "Password",
+        "passwordConfirm": "Confirm Password",
+        "country": "Country",
+        "nativeLanguages": "Native Languages",
+        "learningLanguages": "Learning Languages",
+        "register": "Register",
+        "next": "Next",
+        "back": "Back"
+    },
+
+    "card": {
+        "deTranslation": "German",
+        "enTranslation": "Englisch",
+        "privacy": "Public",
+        "create": "Create Card",
+        "update": "Update Card",
+        "updateSuccess": "Card successfully updated",
+        "createSuccess": "Card successfully created",
+        "noData": "You haven't created a Card yet",
+        "delete": "Card successfully deleted"
+    },
+
+    "collection": {
+        "search": "Search...",
+        "name": "Name",
+        "createCollection": "Create Collection",
+        "updateCollection": "Update Collection",
+        "updateSuccess": "Collection successfully updated",
+        "createSuccess": "Collection successfully created",
+        "noData": "You haven't created a Collection yet",
+        "delete": "Collection successfully deleted"
+    },
+
+    "tag":{
+        "new": "Create New Tag",
+        "label": "Enter Tag name",
+        "close": "Close",
+        "create": "Create Tag"
+    },
+
+    "filter": {
+        "tagSearch": "Search tags..."
+      },
+
+    "error": {
+        "required": "Field cannot be empty",
+        "translation": "Translation is required",
+        "name": "Name cannot be empty",
+        "cards": "A collection requires at least 1 card",
+        "tag": "Tag cannot be empty",
+        "fetchFailed": "Failed to fetch Data",
+        "deleteFailed": "Failed to delete",
+        "cardNotFound": "Couldn't find this Card",
+        "collectionNotFound": "Couldn't find this Collection",
+        "noChanges": "There are no changes to update",
+        "failed": "Internal Server Error"
+    },
+
+    "delete": {
+        "title": "Confirm Deletion",
+        "textCard": "Are you sure you want to delete the following card?",
+        "textCollection": "Are you sure you want to delete the following collection?",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      }
+}

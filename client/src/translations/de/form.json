@@ -1,0 +1,75 @@
+{
+  "userName": "Benutzername",
+  "password": "Passwort",
+  "preview": "Vorschau",
+  "endPreview": "Vorschau beenden",
+
+  "registration": {
+    "username": "Benutzername",
+    "email": "E-Mail-Adresse",
+    "password": "Passwort",
+    "passwordConfirm": "Passwort bestätigen",
+    "country": "Land",
+    "nativeLanguages": "Muttersprachen",
+    "learningLanguages": "Lernsprachen",
+    "register": "Registrieren",
+    "next": "Weiter",
+    "back": "Zurück"
+  },
+
+  "card": {
+    "deTranslation": "Deutsch",
+    "enTranslation": "Englisch",
+    "privacy": "Öffentlich",
+    "create": "Karte erstellen",
+    "update": "Karte aktualisieren",
+    "updateSuccess": "Karte erfolgreich aktualisiert",
+    "createSuccess": "Karte erfolgreich erstellt",
+    "noData": "Du hast noch keine Karte erstellt",
+    "delete": "Karte erfolgreich gelöscht"
+  },
+
+  "collection": {
+    "search": "Suchen...",
+    "name": "Titel",
+    "createCollection": "Sammlung erstellen",
+    "updateCollection": "Sammlung aktualisieren",
+    "updateSuccess": "Sammlung erfolgreich aktualisiert",
+    "createSuccess": "Sammlung erfolgreich erstellt",
+    "noData": "Du hast noch keine Sammlungen erstellt",
+    "delete": "Sammlung erfolgreich gelöscht"
+  },
+
+  "tag":{
+    "new": "Neuen Tag erstellen",
+    "label": "Neuen Tag eintragen",
+    "close": "Schließen",
+    "create": "Tag erstellen"
+  },
+
+  "filter": {
+    "tagSearch": "Tags suchen..."
+  },
+
+  "error": {
+    "required": "Pflichtfelder dürfen nicht leer sein",
+    "translation": "Übersetzung darf nicht leer sein",
+    "name": "Der Name darf nicht leer sein",
+    "cards": "Die Kollektion braucht mindestens 1 Karte",
+    "tag": "Der Tag darf nicht leer sein",
+    "fetchFailed": "Fehler beim Abrufen der Daten",
+    "deleteFailed": "Fehler beim Löschen",
+    "cardNotFound": "Karte wurde nicht gefunden",
+    "collectionNotFound": "Sammlung wurde nicht gefunden",
+    "noChanges": "Es wurden keine Änderungen durchgeführt",
+    "failed": "Interne Serverprobleme"
+  },
+
+  "delete": {
+    "title": "Löschen bestätigen",
+    "textCard": "Bist du sicher, dass du diese Karte löschen möchtest?",
+    "textCollection": "Bist du sicher, dass du diese Sammlung löschen möchtest?",
+    "confirm": "Löschen",
+    "cancel": "Abbrechen"
+  }
+}
