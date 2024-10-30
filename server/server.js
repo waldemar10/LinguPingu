@@ -8,6 +8,7 @@ const connectDB = require("./connectdb");
 const User = require("./model/User");
 const { sendMail } = require("./controllers/MailController");
 const crypto = require("crypto");
+const helmet = require('helmet');
 
 // * Controllers
 /* const {
@@ -45,6 +46,17 @@ const { publicKey, privateKey } = generateVapidKeys(); */ // Save these keys in 
 
 /* Parse incoming request bodies in JSON Format. 
 This is more convenient to work with */
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", "https://trustedimage.com"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+    },
+  })
+);
+
 app.use(express.json());
 
 /* Parse incoming request bodies with URL-encoded data packages. 

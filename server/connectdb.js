@@ -42,7 +42,7 @@ async function run() {
 } */
 
 
-function callbackFunction(result, message = "") {
+/* function callbackFunction(result, message = "") {
   if (message !== "") {
     if (!Array.isArray(result)) {
       console.log(message + ":" + result);
@@ -109,3 +109,4 @@ function deleteData(collection, query = {}, callback = callbackFunction) {
     }
   });
 }
+ */
