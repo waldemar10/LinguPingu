@@ -22,7 +22,7 @@ const vocabularyCollectionController = require("./controllers/vocabularyCollecti
 const tagController = require("./controllers/tagController");
 
 const app = express();
-const port = 5000; // Port for the server to listen on
+const PORT = process.env.PORT || 5000; 
 
 // VAPID keys
 const publicKey = process.env.VAPID_PUBLIC_KEY;
@@ -108,7 +108,7 @@ connectDB();
 // * Connect to MongoDB and check if server is running successfully
 mongoose.connection.once("open", () => {
   console.log("Connected to Database");
-  app.listen(port, () => console.log("Server is running on port " + port)); // Start the server
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`)); // Start the server
 });
 
 // Dummy-Benutzerdaten
