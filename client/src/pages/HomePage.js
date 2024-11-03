@@ -1,10 +1,11 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 import NavigationBar from "../components/NavigationBar";
 import { useTranslation } from "react-i18next";
 import slogans from "../slogans.json";
+import { useNavigate } from "react-router-dom";
 
 import happyPingu from "../images/PinguIcons/happyPingu.png";
 import "../styles/Home.css";
@@ -13,6 +14,7 @@ import "../styles/Home.css";
  */
 const HomePage = () => {
   const [t, i18next] = useTranslation();
+  const navigate = useNavigate();
   // * The randomSlogan variable is used to display a random slogan on the Home page.
   const postTexts = {
     de: [
@@ -42,16 +44,66 @@ const HomePage = () => {
   };
 
   // * The UserContext is used to access the user data.
-  const { user } = useContext(UserContext);
-
+  /* const { user } = useContext(UserContext); */
+  const [user, setUser] = useState(null); 
   // * The state of the header is used to determine whether the header should be displayed or not.
   const [showHeader, setShowHeader] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [loadingUser, setLoadingUser] = useState(true);
   const { targetLanguage, setLanguages } = useLanguage();
   const nativeLanguage = i18next.language;
-  if (!user) {
+
+  const fetchProtectedData = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/protected`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      navigate("/landing");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const fetchUserData = async () => {
+    setLoadingUser(true);
+    try {
+      const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/user`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setUser(data);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    } finally {
+      setLoadingUser(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProtectedData();
+    fetchUserData();
+  }, [navigate]);
+ 
+  if (loading || loadingUser) {
     return <div>Loading...</div>;
   }
-
   let randomSlogan = "";
 
   if (postTexts[nativeLanguage]) {

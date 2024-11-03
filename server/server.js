@@ -10,6 +10,7 @@ const { sendMail } = require("./controllers/MailController");
 const crypto = require("crypto");
 const helmet = require('helmet');
 const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 // * Controllers
 /* const {
   getGrammarData,
@@ -46,6 +47,13 @@ const { publicKey, privateKey } = generateVapidKeys(); */ // Save these keys in 
 
 /* Parse incoming request bodies in JSON Format. 
 This is more convenient to work with */
+
+const corsOptions = {
+  origin: 'http://localhost:3000',
+  credentials: true,
+};
+app.use(cors(corsOptions));
+
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
@@ -56,20 +64,36 @@ app.use(
     },
   })
 );
-
+app.use(cookieParser());
 app.use(express.json());
 
 /* Parse incoming request bodies with URL-encoded data packages. 
 E.g data from HTML forms */
 app.use(express.urlencoded({ extended: false }));
-/* Enables Cross-Origin Resource Sharing (CORS) */
-app.use(cors());
 
 /* app.get('/home/:lang?', (req, res) => {
   const lang = req.params.lang || 'default'; 
 
   res.sendFile();
 }); */
+const authenticateToken = (req, res, next) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.sendStatus(401);
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.sendStatus(403);
+    }
+    req.user = user;
+    next();
+  });
+};
+app.get('/protected', authenticateToken, (req, res) => {
+  res.json({ message: "Zugriff gewährt" });
+});
 
 app.post("/subscribe", (req, res) => {
   const { endpoint, keys } = req.body;
@@ -112,10 +136,25 @@ mongoose.connection.once("open", () => {
 });
 
 // Dummy-Benutzerdaten
-const users = [{ username: "user", password: "1" }];
+/* const users = [{ username: "user", password: "1" }]; */
 /* Just to show login info */
-app.get("/users", (req, res) => {
-  res.json(users);
+app.get('/user', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+
+    if (user) {
+      
+      const userObject = user.toObject();
+      delete userObject.password;
+
+      res.json(userObject);
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (error) {
+    console.error("Fehler beim Abrufen des Benutzers:", error);
+    res.status(500).json({ message: "Serverfehler" });
+  }
 });
 
 /**
@@ -140,7 +179,7 @@ app.post("/login", async (req, res) => {
     }
 
     // * Überprüft, ob das Passwort übereinstimmt.
-    if (user) {
+   
       console.log("Comparing password");
       user.comparePassword(password, function (err, isMatch) {
         if (err) {
@@ -150,12 +189,20 @@ app.post("/login", async (req, res) => {
         if (isMatch) {
           console.info("Login erfolgreich");
           const userObject = user.toObject();
-          const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '1h' });
+          const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
           delete userObject.password;
+
+
+          res.cookie('token', token, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === 'production', 
+            sameSite: 'Strict', 
+            maxAge: 3600000, 
+          });
+
           return res.status(200).json({
             message: "Login erfolgreich!",
             user: userObject,
-            token: token,
           });
         } else {
           console.error("Login fehlgeschlagen. Passwort stimmt nicht überein.");
@@ -163,7 +210,7 @@ app.post("/login", async (req, res) => {
           return res.status(401).json({ errors });
         }
       });
-    }
+    
   });
 });
 
@@ -465,7 +512,7 @@ app.get("/verify/:token", async function (req, res) {
  * @returns {Error} 500 - Internal server error
  * @returns {Error} 404 - User not found
  */
-app.post("/biography", async (req, res) => {
+app.post("/biography",authenticateToken, async (req, res) => {
   console.log("Biografie aktualisieren");
 
   try {
@@ -498,7 +545,7 @@ app.post("/biography", async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Biografie erfolgreich aktualisiert",
-      user: updatedUser,
+     /*  user: updatedUser, */
     });
   } catch (error) {
     console.error("Fehler beim Aktualisieren der Biografie", error);
@@ -509,7 +556,7 @@ app.post("/biography", async (req, res) => {
 /**
  * * Update the users data.
  * **/
-app.post("/updateUser", async (req, res) => {
+app.post("/updateUser",authenticateToken, async (req, res) => {
   try {
     const {
       userId,
@@ -579,7 +626,7 @@ app.post("/updateUser", async (req, res) => {
 /* insertGrammarData(EverydayLife);
 insertGrammarData(TimePhrases); */
 // * Get grammar data from database
-app.get("/getGrammarData", async (req, res) => {
+app.get("/getGrammarData",authenticateToken, async (req, res) => {
   try {
     const everydayLifeData = await Grammar.find({ category: "Everyday Life" });
     const timePhrasesData = await Grammar.find({ category: "Time Phrases" });
@@ -597,7 +644,7 @@ app.get("/getGrammarData", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-app.get("/lessonProgress/:userId/:lessonId", async (req, res) => {
+app.get("/lessonProgress/:userId/:lessonId",authenticateToken, async (req, res) => {
   const { userId, lessonId } = req.params;
 
   try {

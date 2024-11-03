@@ -1,37 +1,76 @@
-import { useContext, useState } from "react";
+import { useContext, useState,useEffect } from "react";
 import { UserContext } from "../context/UserContext";
 import NavigationBar from "../components/NavigationBar";
 import Flag from "react-world-flags";
 import { Container, Row, Col, Image } from "react-bootstrap";
 import { FaEdit } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 function ProfilePage() {
   const [t] = useTranslation("profile");
-  const { user, reloadUser } = useContext(UserContext); // Zugriff auf den Benutzer aus dem Kontext
+  const { reloadUser } = useContext(UserContext); // Zugriff auf den Benutzer aus dem Kontext
 
   const [isEditing, setIsEditing] = useState(false);
-  const [biography, setBiography] = useState(user ? user.biography : "");
-  const [languagesLearning, setLanguagesLearning] = useState(null);
-  const [languagesNative, setLanguagesNative] = useState(null);
+  const [biography, setBiography] = useState("");
+  const [languagesLearning, setLanguagesLearning] = useState("");
+  const [languagesNative, setLanguagesNative] = useState("");
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [user, setUser] = useState(null); 
+  const navigate = useNavigate();
   const handleEditClick = () => {
     setIsEditing(true);
   };
 
  /*  console.log("User:", user); */
+ const fetchUserData = async () => {
+  setLoadingUser(true);
+  try {
+    const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/user`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    setUser(data);
+    setBiography(data.biography);
+    setLanguagesLearning(data.learningLanguages);
+    setLanguagesNative(data.nativeLanguage);
+  } catch (error) {
+    console.error("Fetch error:", error);
+  } finally {
+    setLoadingUser(false);
+    
+  }
+};
+useEffect(() => {
+  fetchUserData();
+}, [navigate]);
+
+if (loadingUser) {
+  return <div>Loading...</div>;
+}
 
   const handleSaveClick = async (event) => {
     event.preventDefault();
 
     setIsEditing(false);
 
-    const user = JSON.parse(localStorage.getItem("user"));
+    /* const user = JSON.parse(localStorage.getItem("user")); */
+    
+    if (!user) {
+      return;
+    }
     user.biography = biography;
-    localStorage.setItem("user", JSON.stringify(user));
-    reloadUser();
+    /* localStorage.setItem("user", JSON.stringify(user)); */
+    /* reloadUser(); */
 
     try {
-      fetch("http://localhost:5000/biography", {
+      fetch(`${process.env.REACT_APP_SERVER_URI}/biography`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -40,6 +79,7 @@ function ProfilePage() {
           username: user.username,
           biography: biography,
         }),
+        credentials: 'include',
       })
         .then((response) => response.json())
         .then((data) => {
@@ -52,7 +92,8 @@ function ProfilePage() {
       console.error("Fehler:", error);
     }
   };
-  if (user) {
+
+ 
     if (languagesLearning === null) {
       const updatedLanguages = user.learningLanguages.map((language) =>
         language === "en" ? "gb" : language
@@ -65,10 +106,6 @@ function ProfilePage() {
       );
       setLanguagesNative(updatedLanguages);
     }
-  }
-  if (!user || languagesLearning === null || languagesNative === null) {
-    return <div>Loading...</div>;
-  }
   
   return (
     <div>
@@ -144,7 +181,7 @@ function ProfilePage() {
                   </div>
                 ) : (
                   <span className="text-center" style={{ width: "50vw" }}>
-                    {biography}
+                    {user.biography}
                   </span>
                 )}
               </div>
