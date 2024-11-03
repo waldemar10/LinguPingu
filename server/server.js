@@ -9,7 +9,7 @@ const User = require("./model/User");
 const { sendMail } = require("./controllers/MailController");
 const crypto = require("crypto");
 const helmet = require('helmet');
-
+const jwt = require('jsonwebtoken');
 // * Controllers
 /* const {
   getGrammarData,
@@ -150,10 +150,12 @@ app.post("/login", async (req, res) => {
         if (isMatch) {
           console.info("Login erfolgreich");
           const userObject = user.toObject();
+          const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '1h' });
           delete userObject.password;
           return res.status(200).json({
             message: "Login erfolgreich!",
             user: userObject,
+            token: token,
           });
         } else {
           console.error("Login fehlgeschlagen. Passwort stimmt nicht überein.");
@@ -163,40 +165,6 @@ app.post("/login", async (req, res) => {
       });
     }
   });
-
-  /*
-  // * Überprüft, ob der Benutzername übereinstimmen.
-  User.findOne({ username: username }).then((user) => {
-    if (user) {
-      // * Überprüft, ob das Passwort übereinstimmt.
-      user.comparePassword(password, (error, isMatch) => {
-        if (error) {
-          console.error("Fehler beim Überprüfen des Passworts:", error);
-          return res.status(500).json({ success: false, message: error });
-        }
-        console.log(isMatch);
-        if (isMatch) {
-          console.info("Login erfolgreich");
-
-          // * User-Objekt wird ohne Passwort zurückgegeben.
-          const userObject = user.toObject();
-          delete userObject.password;
-          return res.status(200).json({
-            success: true,
-            message: "Login erfolgreich",
-            user: userObject,
-          });
-        } else {
-          console.error("Login fehlgeschlagen");
-          return res.status(401).json({
-            success: false,
-            message: "Ungültige Anmeldeinformationen",
-          });
-        }
-      });
-    }
-  });
-  */
 });
 
 /**
