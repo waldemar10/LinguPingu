@@ -1,8 +1,6 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { UserContext } from "../context/UserContext";
-
 /**
  *
  * @returns {JSX.Element} - Das Login-Formular.
@@ -17,10 +15,6 @@ function Login() {
   // * Die folgenden States speichern die Eingaben des Nutzers.
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-
-  // * Der UserContext wird verwendet, um den Nutzer nach dem Login zu speichern.
-  const { login } = useContext(UserContext);
-
   const [errors, setErrors] = useState({});
 
   // * Die folgenden Funktionen aktualisieren die States, wenn sich die Eingaben des Nutzers ändern.
@@ -39,7 +33,7 @@ function Login() {
 
     setErrors({});
     // * Die Login-Daten werden an den Server gesendet.
-    const response = await fetch("http://localhost:5000/login", {
+    const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -48,22 +42,15 @@ function Login() {
         username,
         password,
       }),
+      credentials: "include",
     });
-
-    const data = await response.json();
-
     console.log(response);
-
-    console.log(data);
+    const data = await response.json();
 
     if (data.errors) {
       console.log(data.errors);
       setErrors(data.errors);
     } else {
-      console.log(data.user);
-      const userData = data.user;
-      login(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
       navigate("/home");
     }
   };
@@ -104,8 +91,7 @@ function Login() {
       <button
         className="btn btn-primary m-3"
         type="submit"
-        disabled={!isFormComplete()}
-      >
+        disabled={!isFormComplete()}>
         Login
       </button>
     </form>
