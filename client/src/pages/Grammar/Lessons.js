@@ -103,7 +103,7 @@ function Lessons() {
   const checkCompletion = async (userId, lessonId) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/lessonProgress/${userId}/${lessonId}`,
+        `${process.env.REACT_APP_SERVER_URI}/lessonProgress/${userId}/${lessonId}`,
         {
           method: "GET",
           headers: {

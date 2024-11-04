@@ -26,7 +26,7 @@ function subscribeUserToPush() {
   navigator.serviceWorker.ready.then(registration => {
     registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: 'BMKZg3B1-HNqYfGyY9GvKgqt5-72A3EkViPk-dA0hiCuEDB-73SSAlBQ7Uel10viIgOImkmaZOKTSnMmqM_gibw'
+      applicationServerKey: process.env.REACT_APP_PUBLIC_VAPID_KEY
     })
     .then(subscription => {
       // console.log('User is subscribed:', subscription);
@@ -46,7 +46,7 @@ function sendSubscriptionToServer(subscription) {
     icon:'/logo192.png'
   };
 
-fetch('http://localhost:5000/send-notification', {
+fetch(`${process.env.REACT_APP_SERVER_URI}/send-notification`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',

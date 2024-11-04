@@ -89,6 +89,9 @@ const HomePage = () => {
 
       const data = await response.json();
       setUser(data);
+      // * The username & ProfilePicture is stored in the sessionStorage.
+      sessionStorage.setItem("username", data.username);
+      sessionStorage.setItem("profilePicture64", data.profilePicture64);
     } catch (error) {
       console.error("Fetch error:", error);
     } finally {
@@ -104,6 +107,7 @@ const HomePage = () => {
   if (loading || loadingUser) {
     return <div>Loading...</div>;
   }
+  
   let randomSlogan = "";
 
   if (postTexts[nativeLanguage]) {

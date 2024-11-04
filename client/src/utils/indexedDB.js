@@ -1,14 +1,15 @@
 // Open indexedDB
 export const openDatabase = () => {
   return new Promise((resolve, reject) => {
-    const userData = JSON.parse(localStorage.getItem("user"));
-      const userId = userData ? userData._id : 0;
-    const dbName = `clientLinguPinguDB_${userId}`;
+    
+    const dbName = "clientLinguPinguDB";
     const request = window.indexedDB.open(dbName, 1);
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
+      if(!db.objectStoreNames.contains('myObjectStore'))
+      {
       db.createObjectStore('myObjectStore', { keyPath: 'id' });
-      /* db.createObjectStore('linguPinguGrammarStore', { keyPath: 'id' }); */
+      }
     };
 
     request.onsuccess = (event) => {

@@ -112,7 +112,17 @@ app.post("/subscribe", (req, res) => {
 
   res.status(200).json({ message: "Subscription received" });
 });
-
+app.post("/refreshToken", authenticateToken, (req, res) => {
+  const userId = req.user.userId;
+  const newToken = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  res.cookie('token', newToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict',
+    maxAge: 3600000, // 1 Stunde
+  });
+  res.json({ success: true, message: "Token refreshed" });
+});
 app.post("/send-notification", (req, res) => {
   const { subscription, payload } = req.body;
 
@@ -213,7 +223,14 @@ app.post("/login", async (req, res) => {
     
   });
 });
-
+app.post("/logout", (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+  });
+  res.status(200).json({ message: "Logged out successfully" });
+});
 /**
  * * Registriert einen neuen Benutzer.
  * Überprüft, ob der Benutzername bereits existiert.
@@ -556,63 +573,32 @@ app.post("/biography",authenticateToken, async (req, res) => {
 /**
  * * Update the users data.
  * **/
-app.post("/updateUser",authenticateToken, async (req, res) => {
+app.post("/updateUser", authenticateToken, async (req, res) => {
   try {
-    const {
-      userId,
-      username,
-      biography,
-      email,
-      country,
-      nativeLanguagev,
-      learningLanguages,
-    } = req.body;
+    const { username, biography, email, country, nativeLanguage, learningLanguages } = req.body;
+    const userId = req.user.userId; 
 
-    const userWithNewUsername = username
-      ? await User.findOne({ username: username })
-      : null;
-
-    if (userWithNewUsername) {
-      console.log("New username is already taken");
-      return res
-        .status(400)
-        .json({ success: false, message: "New username is already taken" });
-    }
-
-    const user = await User.findById(userId);
-
-    if (!user) {
-      console.log("User not found");
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+    if (username) {
+      const newUsernameExist = await User.findOne({ username });
+      if (newUsernameExist) {
+        return res.status(400).json({ success: false, message: "Username already taken" });
+      }
     }
 
     const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
     if (!email || !emailRegex.test(email)) {
-      console.log("Invalid e-mail address");
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid e-mail address" });
+      return res.status(400).json({ success: false, message: "Invalid e-mail address" });
     }
 
-    await User.findByIdAndUpdate(userId, {
-      username: username,
-      email: email,
-      biography: biography,
-      country: country,
-      nativeLanguage: nativeLanguagev,
-      learningLanguages: learningLanguages,
-    });
-    const updatedUserFromDB = await User.findById(userId);
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { username, email, biography, country, nativeLanguage, learningLanguages },
+      { new: true }
+    );
 
-    return res.status(200).json({
-      success: true,
-      message: "Update user successfully",
-      user: updatedUserFromDB,
-    });
+    return res.status(200).json({ success: true, message: "User updated successfully", user: updatedUser });
   } catch (error) {
-    console.error("Error during user update", error);
+    console.error("Error during user update:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 });
