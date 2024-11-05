@@ -1,73 +1,102 @@
-import { useContext, useState,useEffect } from "react";
+import { useContext, useState, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
 import NavigationBar from "../components/NavigationBar";
 import Flag from "react-world-flags";
 import { Container, Row, Col, Image } from "react-bootstrap";
 import { FaEdit } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 
 function ProfilePage() {
   const [t] = useTranslation("profile");
-  const { reloadUser } = useContext(UserContext); // Zugriff auf den Benutzer aus dem Kontext
 
   const [isEditing, setIsEditing] = useState(false);
-  const [biography, setBiography] = useState("");
-  const [languagesLearning, setLanguagesLearning] = useState("");
-  const [languagesNative, setLanguagesNative] = useState("");
+  const [username, setUsername] = useState();
+  const [country, setCountry] = useState();
+  const [biography, setBiography] = useState();
+  const [learningLanguage, setLearningLanguage] = useState();
+  const [nativeLanguage, setNativeLanguage] = useState();
+  const [profilePicture512,setProfilePicture512] = useState();
   const [loadingUser, setLoadingUser] = useState(true);
-  const [user, setUser] = useState(null); 
-  const navigate = useNavigate();
+
   const handleEditClick = () => {
     setIsEditing(true);
   };
 
- /*  console.log("User:", user); */
- const fetchUserData = async () => {
-  setLoadingUser(true);
-  try {
-    const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/user`, {
-      method: 'GET',
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    setUser(data);
-    setBiography(data.biography);
-    setLanguagesLearning(data.learningLanguages);
-    setLanguagesNative(data.nativeLanguage);
-  } catch (error) {
-    console.error("Fetch error:", error);
-  } finally {
-    setLoadingUser(false);
+  const fetchUserData = async () => {
     
-  }
-};
-useEffect(() => {
-  fetchUserData();
-}, [navigate]);
+    try {
+      const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/user`, {
+        method: "GET",
+        credentials: "include",
+      });
 
-if (loadingUser) {
-  return <div>Loading...</div>;
-}
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setUsername(data.username);
+      setBiography(data.biography);
+      setProfilePicture512(data.profilePicture512);
+      setCountry(data.country);
+      setLearningLanguage(data.learningLanguages);
+      setNativeLanguage(data.nativeLanguage);
+      sessionStorage.setItem("username", data.username);
+      sessionStorage.setItem("biography", data.biography);
+      sessionStorage.setItem("profilePicture64", data.profilePicture64);
+      sessionStorage.setItem("profilePicture512", data.profilePicture512);
+      sessionStorage.setItem("country", data.country);
+      sessionStorage.setItem("verified", data.verified);
+      localStorage.setItem("learningLanguages", data.learningLanguages[0]);
+      localStorage.setItem("nativeLanguage", data.nativeLanguage[0]);
+      localStorage.setItem("appLanguage", data.nativeLanguage[0]);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    } finally {
+      setLoadingUser(false);
+    }
+  };
+  useEffect(() => {
+    setLoadingUser(true);
+    if (sessionStorage.getItem("username") !== null) {
+      setUsername(sessionStorage.getItem("username"));
+    }
+    if(sessionStorage.getItem("biography") !== null){
+      setBiography(sessionStorage.getItem("biography"));
+    }
+    if (sessionStorage.getItem("profilePicture512") !== null) {
+      setProfilePicture512(sessionStorage.getItem("profilePicture512"));
+    }
+    if (sessionStorage.getItem("country") !== null) {
+      setCountry(sessionStorage.getItem("country"));
+    }
+    if (localStorage.getItem("learningLanguages") !== null) {
+      setLearningLanguage(localStorage.getItem("learningLanguages"));
+    }
+    if (localStorage.getItem("nativeLanguage") !== null) {
+      setNativeLanguage(localStorage.getItem("nativeLanguage"));
+    }
+    if (
+      !sessionStorage.getItem("username") ||
+      !localStorage.getItem("learningLanguages") ||
+      !localStorage.getItem("nativeLanguage") ||
+      !sessionStorage.getItem("profilePicture512") ||
+      !sessionStorage.getItem("country")
+    ) {
+      fetchUserData();
+    }else{
+      setLoadingUser(false);
+    }
+  }, []);
+
+  if (loadingUser) {
+    return <div>Loading...</div>;
+  }
 
   const handleSaveClick = async (event) => {
     event.preventDefault();
 
     setIsEditing(false);
-
-    /* const user = JSON.parse(localStorage.getItem("user")); */
-    
-    if (!user) {
-      return;
-    }
-    user.biography = biography;
-    /* localStorage.setItem("user", JSON.stringify(user)); */
-    /* reloadUser(); */
 
     try {
       fetch(`${process.env.REACT_APP_SERVER_URI}/biography`, {
@@ -76,10 +105,10 @@ if (loadingUser) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: user.username,
+          username: username,
           biography: biography,
         }),
-        credentials: 'include',
+        credentials: "include",
       })
         .then((response) => response.json())
         .then((data) => {
@@ -93,20 +122,6 @@ if (loadingUser) {
     }
   };
 
- 
-    if (languagesLearning === null) {
-      const updatedLanguages = user.learningLanguages.map((language) =>
-        language === "en" ? "gb" : language
-      );
-      setLanguagesLearning(updatedLanguages);
-    }
-    if (languagesNative === null) {
-      const updatedLanguages = user.nativeLanguage.map((language) =>
-        language === "en" ? "gb" : language
-      );
-      setLanguagesNative(updatedLanguages);
-    }
-  
   return (
     <div>
       {/**
@@ -122,14 +137,13 @@ if (loadingUser) {
 
         <Container
           className="d-flex flex-column justify-content-between w-100 mt-4 bg-light text-dark rounded p-4"
-          style={{ height: "90%" }}
-        >
+          style={{ height: "90%" }}>
           {/**
            * Big Profile Picture
            */}
           <div className="d-flex flex-wrap justify-content-center align-items-center m-4 pt-3">
             <Image
-              src={user.profilePicture512}
+              src={profilePicture512}
               alt="Profilbild"
               className="rounded-circle img-fluid m-5 justify-content-center border border-secondary border-3"
               style={{ width: "30%", height: "auto" }}
@@ -139,7 +153,7 @@ if (loadingUser) {
              * Username
              */}
             <h1 className="m-4" style={{ fontSize: "3rem" }}>
-              {user.username}
+              {username}
             </h1>
 
             {/**
@@ -147,7 +161,7 @@ if (loadingUser) {
              */}
             <div className="d-flex align-items-center justify-content-center m-1">
               <Flag
-                code={user.country}
+                code={country}
                 height="48"
                 style={{ width: "8vw", height: "auto" }}
               />
@@ -174,14 +188,13 @@ if (loadingUser) {
                     />
                     <button
                       onClick={handleSaveClick}
-                      className="btn btn-primary mt-2"
-                    >
+                      className="btn btn-primary mt-2">
                       {t("save")}
                     </button>
                   </div>
                 ) : (
                   <span className="text-center" style={{ width: "50vw" }}>
-                    {user.biography}
+                    {biography}
                   </span>
                 )}
               </div>
@@ -190,43 +203,41 @@ if (loadingUser) {
           <Row className="d-flex justify-content-center align-items-center w-100">
             <Col
               md={4}
-              className="d-flex flex-column align-items-center justify-content-center"
-            >
+              className="d-flex flex-column align-items-center justify-content-center">
               {/**
                * Native Language
                */}
               <div className="d-flex flex-column align-items-center justify-content-center m-3">
                 <h3 className="mt-3">{t("nativeLanguages")}</h3>
                 <div className="d-flex flex-row align-items-center justify-content-center">
-                  {languagesNative.map((language) => (
+                  
                     <Flag
-                      key={language}
-                      code={language}
+                      key={nativeLanguage}
+                      code={nativeLanguage}
                       height="32"
                       style={{ margin: "0 5px" }}
                     />
-                  ))}
+               
                 </div>
               </div>
             </Col>
             <Col
               md={4}
-              className="d-flex flex-column align-items-center justify-content-center"
-            >
+              className="d-flex flex-column align-items-center justify-content-center">
               {/**
                * Learning Languages
                */}
               <div className="d-flex flex-column align-items-center justify-content-center">
                 <h3 className="mt-3">{t("learningLanguages")}</h3>
                 <div className="d-flex flex-row align-items-center justify-content-center">
-                  {languagesLearning.map((language) => (
+               
                     <Flag
-                      key={language}
-                      code={language}
+                      key={learningLanguage}
+                      code={learningLanguage}
                       height="32"
                       style={{ margin: "0 5px" }}
                     />
-                  ))}
+              
                 </div>
               </div>
             </Col>

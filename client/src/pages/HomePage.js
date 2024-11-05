@@ -1,7 +1,6 @@
 import { useState, useContext, useEffect } from "react";
-import { UserContext } from "../context/UserContext";
+import { LanguageContext } from "../context/LanguageContext";
 import { Link } from "react-router-dom";
-import { useLanguage } from "../context/LanguageContext";
 import NavigationBar from "../components/NavigationBar";
 import { useTranslation } from "react-i18next";
 import slogans from "../slogans.json";
@@ -13,7 +12,7 @@ import "../styles/Home.css";
  * @returns {JSX.Element} The Home page component.
  */
 const HomePage = () => {
-  const [t, i18next] = useTranslation();
+  const [t, i18next] = useTranslation("mainPages");
   const navigate = useNavigate();
   // * The randomSlogan variable is used to display a random slogan on the Home page.
   const postTexts = {
@@ -45,21 +44,29 @@ const HomePage = () => {
 
   // * The UserContext is used to access the user data.
   /* const { user } = useContext(UserContext); */
-  const [user, setUser] = useState(null); 
+  /* const [user, setUser] = useState(null);  */
   // * The state of the header is used to determine whether the header should be displayed or not.
   const [showHeader, setShowHeader] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [loadingUser, setLoadingUser] = useState(true);
-  const { targetLanguage, setLanguages } = useLanguage();
-  const nativeLanguage = i18next.language;
+  const [loadingUser, setLoadingUser] = useState(false);
+  const [randomSlogan, setRandomSlogan] = useState("");
+  const {
+    appLanguage,
+    setAppLanguage,
+    setLearningLanguage,
+    setNativeLanguage,
+  } = useContext(LanguageContext);
 
   const fetchProtectedData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/protected`, {
-        method: 'GET',
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_SERVER_URI}/protected`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -74,13 +81,13 @@ const HomePage = () => {
       setLoading(false);
     }
   };
-  
+
   const fetchUserData = async () => {
     setLoadingUser(true);
     try {
       const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/user`, {
-        method: 'GET',
-        credentials: 'include',
+        method: "GET",
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -88,10 +95,18 @@ const HomePage = () => {
       }
 
       const data = await response.json();
-      setUser(data);
-      // * The username & ProfilePicture is stored in the sessionStorage.
       sessionStorage.setItem("username", data.username);
+      sessionStorage.setItem("biography", data.biography);
       sessionStorage.setItem("profilePicture64", data.profilePicture64);
+      sessionStorage.setItem("profilePicture512", data.profilePicture512);
+      sessionStorage.setItem("country", data.country);
+      sessionStorage.setItem("verified", data.verified);
+      localStorage.setItem("learningLanguages", data.learningLanguages[0]);
+      localStorage.setItem("nativeLanguage", data.nativeLanguage[0]);
+      localStorage.setItem("appLanguage", data.nativeLanguage[0]);
+      setLearningLanguage(data.learningLanguages[0]);
+      setNativeLanguage(data.nativeLanguage[0]);
+      setAppLanguage(data.appLanguage);
     } catch (error) {
       console.error("Fetch error:", error);
     } finally {
@@ -100,48 +115,40 @@ const HomePage = () => {
   };
 
   useEffect(() => {
-    fetchProtectedData();
-    fetchUserData();
+    if (
+      !sessionStorage.getItem("username") ||
+      !localStorage.getItem("learningLanguages") ||
+      !localStorage.getItem("appLanguage") ||
+      !localStorage.getItem("appLanguage") ||
+      !sessionStorage.getItem("profilePicture64") ||
+      !sessionStorage.getItem("country")
+    ) {
+      fetchUserData();
+    } else {
+      setLearningLanguage(localStorage.getItem("learningLanguages"));
+      setNativeLanguage(localStorage.getItem("nativeLanguage"));
+      setAppLanguage(localStorage.getItem("appLanguage"));
+    }
+    if (postTexts[appLanguage]) {
+      const selectedSlogans = postTexts[appLanguage];
+      setRandomSlogan(
+        selectedSlogans[Math.floor(Math.random() * selectedSlogans.length)]
+      );
+    } else {
+      const selectedSlogans = postTexts["en"];
+      setRandomSlogan(
+        selectedSlogans[Math.floor(Math.random() * selectedSlogans.length)]
+      );
+    }
   }, [navigate]);
- 
+
+  useEffect(() => {
+    fetchProtectedData();
+  }, [navigate]);
+
   if (loading || loadingUser) {
     return <div>Loading...</div>;
   }
-  
-  let randomSlogan = "";
-
-  if (postTexts[nativeLanguage]) {
-    const selectedSlogans = postTexts[nativeLanguage];
-    randomSlogan =
-      selectedSlogans[Math.floor(Math.random() * selectedSlogans.length)];
-  } else {
-    const selectedSlogans = postTexts["en"];
-    randomSlogan =
-      selectedSlogans[Math.floor(Math.random() * selectedSlogans.length)];
-  }
-
-  const verificationText = {
-    de: "Ihr Konto ist noch nicht verifiziert! Bitte überprüfen Sie Ihre E-Mails, um Ihr Konto zu verifizieren.",
-    en: "Your account is not yet verified! Please check your emails to verify your account.",
-  };
-  const gamesHeadline = {
-    de: "Spiele",
-    en: "Games",
-  };
-  const vocabularyHeadline = {
-    de: "Vokabeln",
-    en: "Vocabulary",
-  };
-  const grammarHeadline = {
-    de: "Grammatik",
-    en: "Grammar",
-  };
-  const keyVerifictaionText =
-    verificationText[nativeLanguage] ||
-    "Your account is not yet verified! Please check your emails to verify your account.";
-  const keyGames = gamesHeadline[nativeLanguage] || "Games";
-  const keyVocabulary = vocabularyHeadline[nativeLanguage] || "Vocabulary";
-  const keyGrammar = grammarHeadline[nativeLanguage] || "Grammar";
 
   // * HTML code of the HomePage component.
   return (
@@ -157,18 +164,18 @@ const HomePage = () => {
          * The header is only displayed if the user is logged in and the account is not yet verified.
          * It can be closed by clicking on the close button.
          */}
-        {user && !user.verified && showHeader && (
+        {sessionStorage.getItem("verified") && showHeader && (
           <div
             className="alert-width alert alert-v2 alert-warning d-inline-flex justify-content-between align-items-center py-2"
             role="alert"
-            style={{ marginTop: "2rem", zIndex: "1" }}
-          >
-            <p className="mb-0 me-2 align-self-center">{keyVerifictaionText}</p>
+            style={{ marginTop: "2rem", zIndex: "1" }}>
+            <p className="mb-0 me-2 align-self-center">
+              {t("homePage.verificationText")}
+            </p>
             <button
               type="button"
               className="btn-close"
-              onClick={() => setShowHeader(false)}
-            ></button>
+              onClick={() => setShowHeader(false)}></button>
           </div>
         )}
 
@@ -206,23 +213,20 @@ const HomePage = () => {
         <div className="home-box mt-4">
           <Link
             className="btn home-button bg-home-button text-white btn-hover text-uppercase"
-            to="/games"
-          >
-            <h3>{keyGames}</h3>
+            to="/games">
+            <h3>{t("homePage.gamesHeadline")}</h3>
           </Link>
 
           <Link
             className="btn home-button bg-home-button text-white btn-hover text-uppercase"
-            to="/vocabulary"
-          >
-            <h3>{keyVocabulary}</h3>
+            to="/vocabulary">
+            <h3>{t("homePage.vocabularyHeadline")}</h3>
           </Link>
 
           <Link
             className="btn home-button bg-home-button text-white btn-hover text-uppercase"
-            to="/grammar"
-          >
-            <h3>{keyGrammar}</h3>
+            to="/grammar">
+            <h3>{t("homePage.grammarHeadline")}</h3>
           </Link>
         </div>
       </div>
