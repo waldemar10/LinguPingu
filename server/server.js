@@ -37,7 +37,7 @@ webPush.setVapidDetails("mailto:your@email.com", publicKey, privateKey);
 
 const corsOptions = {
   origin: ['http://localhost:3000',
-  'https://lingupingu.onrender.com'],
+  'https://lingupingu.waljus.de'],
   credentials: true,
 };
 app.use(cors(corsOptions));
