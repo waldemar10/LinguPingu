@@ -11,15 +11,12 @@ const crypto = require("crypto");
 const helmet = require('helmet');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
-// * Controllers
-/* const {
-  getGrammarData,
-  insertGrammarData,
-} = require("./controllers/grammarController"); */
 
-const Grammar = require("./model/Grammar");
 const vocabularyController = require("./controllers/vocabularyController");
 const vocabularyCollectionController = require("./controllers/vocabularyCollectionController");
+const lessonController = require("./controllers/lessonController");
+const grammarController = require("./controllers/grammarController");
+const userController = require("./controllers/userController");
 const tagController = require("./controllers/tagController");
 
 const app = express();
@@ -37,16 +34,6 @@ if (!publicKey || !privateKey) {
 }
 
 webPush.setVapidDetails("mailto:your@email.com", publicKey, privateKey);
-
-/* !For future database */
-/* Generate unique keys for every user */
-/* function generateVapidKeys() {
-  return webPush.generateVAPIDKeys();
-}
-const { publicKey, privateKey } = generateVapidKeys(); */ // Save these keys in the database (MongoDB)
-
-/* Parse incoming request bodies in JSON Format. 
-This is more convenient to work with */
 
 const corsOptions = {
   origin: 'http://localhost:3000',
@@ -71,11 +58,7 @@ app.use(express.json());
 E.g data from HTML forms */
 app.use(express.urlencoded({ extended: false }));
 
-/* app.get('/home/:lang?', (req, res) => {
-  const lang = req.params.lang || 'default'; 
 
-  res.sendFile();
-}); */
 const authenticateToken = (req, res, next) => {
   const token = req.cookies.token;
 
@@ -113,6 +96,9 @@ app.post("/subscribe", (req, res) => {
   res.status(200).json({ message: "Subscription received" });
 });
 app.post("/refreshToken", authenticateToken, (req, res) => {
+  if (!req.user || !req.user.userId) {
+    return res.status(401).json({ error: "Not authorized to refresh token" });
+  }
   const userId = req.user.userId;
   const newToken = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
   res.cookie('token', newToken, {
@@ -145,27 +131,7 @@ mongoose.connection.once("open", () => {
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`)); // Start the server
 });
 
-// Dummy-Benutzerdaten
-/* const users = [{ username: "user", password: "1" }]; */
-/* Just to show login info */
-app.get('/user', authenticateToken, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.userId);
 
-    if (user) {
-      
-      const userObject = user.toObject();
-      delete userObject.password;
-
-      res.json(userObject);
-    } else {
-      res.sendStatus(404);
-    }
-  } catch (error) {
-    console.error("Fehler beim Abrufen des Benutzers:", error);
-    res.status(500).json({ message: "Serverfehler" });
-  }
-});
 
 /**
  * * Loggt einen Benutzer ein.
@@ -211,8 +177,7 @@ app.post("/login", async (req, res) => {
           });
 
           return res.status(200).json({
-            message: "Login erfolgreich!",
-            user: userObject,
+            message: "Login erfolgreich!"
           });
         } else {
           console.error("Login fehlgeschlagen. Passwort stimmt nicht überein.");
@@ -231,95 +196,7 @@ app.post("/logout", (req, res) => {
   });
   res.status(200).json({ message: "Logged out successfully" });
 });
-/**
- * * Registriert einen neuen Benutzer.
- * Überprüft, ob der Benutzername bereits existiert.
- * Überprüft, ob die Passwörter übereinstimmen.
- *
- *
- * @route POST /registration
- * @group User
- */
-// ? Maybe not needed anymore
-/* app.post("/registration", (req, res) => {
-  console.info("Registrierungsanfrage erhalten.");
 
-  const {
-    username,
-    email,
-    password,
-    confirmPassword,
-    country,
-    nativeLanguage,
-    learningLanguages,
-  } = req.body;
-
-  // * Überprüft, ob der Benutzername bereits existiert.
-  User.findOne({ username: username })
-    .then((user) => {
-      if (user) {
-        console.log("Benutzer existiert bereits.");
-        return res
-          .status(400)
-          .json({ success: false, message: "Benutzer existiert bereits." });
-      }
-
-      // * Validiert die E-Mail-Adresse.
-      const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
-      if (!emailRegex.test(email)) {
-        console.log("Ungültige E-Mail-Adresse.");
-        return res
-          .status(400)
-          .json({ success: false, message: "Ungültige E-Mail-Adresse." });
-      }
-
-      // * Generates a random token for email verification.
-      const verificationToken = crypto.randomBytes(64).toString("hex");
-
-      // * Sends a verification email to the user.
-      console.log(email +" token : "+verificationToken)
-      sendMail(email, verificationToken);
-      
-      // * Überprüft, ob die Passwörter übereinstimmen.
-      if (password !== confirmPassword) {
-        console.log("Passwort stimmt nicht überein.");
-        return res
-          .status(400)
-          .json({ success: false, message: "Passwort stimmt nicht überein." });
-      }
-
-      // * Überprüft das Passwort mit einem regulären Ausdruck.
-      const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
-      if (!passwordRegex.test(password)) {
-        console.log("Passwort erfüllt nicht die Anforderungen.");
-        return res.status(400).json({
-          success: false,
-          message: "Passwort erfüllt nicht die Anforderungen.",
-        });
-      }
-
-      // * Erstellt einen neuen Benutzer.
-      return User.create({
-        username: username,
-        email: email,
-        password: password,
-        country: country,
-        nativeLanguage: nativeLanguage,
-        learningLanguages: learningLanguages,
-        verificationToken: verificationToken,
-      });
-    })
-    .then(() => {
-      console.log("Registrierung erfolgreich.");
-      return res
-        .status(201)
-        .json({ success: true, message: "Registrierung erfolgreich." });
-    })
-    .catch((error) => {
-      console.error("Fehler beim Registrieren des Benutzers:", error);
-      return res.status(500).json({ success: false, message: error });
-    });
-}); */
 
 app.post("/validateRegistration", async (req, res) => {
   const { username, password, confirmPassword, email } = req.body;
@@ -520,57 +397,6 @@ app.get("/verify/:token", async function (req, res) {
 });
 
 /**
- * * Updates the user's biography.
- * @route PUT /biography
- * @group User
- * @param {string} username.body.required - The username of the user.
- * @param {string} biography.body.required - The biography of the user.
- * @returns {object} 200 - Success message
- * @returns {Error} 500 - Internal server error
- * @returns {Error} 404 - User not found
- */
-app.post("/biography",authenticateToken, async (req, res) => {
-  console.log("Biografie aktualisieren");
-
-  try {
-    const { username, biography } = req.body;
-
-    console.log("Benutzername:", username);
-    console.log("Biografie:", biography);
-
-    const user = await User.findOne({ username });
-
-    if (!user) {
-      console.log("Benutzer nicht gefunden");
-      return res
-        .status(404)
-        .json({ success: false, message: "Benutzer nicht gefunden" });
-    }
-
-    await User.findOneAndUpdate(
-      { username },
-      {
-        biography: biography,
-      }
-    );
-
-    const updatedUser = await User.findOne({ username });
-
-    console.log("Updated user:", updatedUser);
-
-    console.log("Biografie erfolgreich aktualisiert");
-    return res.status(200).json({
-      success: true,
-      message: "Biografie erfolgreich aktualisiert",
-     /*  user: updatedUser, */
-    });
-  } catch (error) {
-    console.error("Fehler beim Aktualisieren der Biografie", error);
-    return res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-/**
  * * Update the users data.
  * **/
 app.post("/updateUser", authenticateToken, async (req, res) => {
@@ -602,152 +428,12 @@ app.post("/updateUser", authenticateToken, async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 });
-
-/**
- *
- * @route GET /getGrammarData
- * @group Grammar
- */
-// * Insert grammar data into database
-/* insertGrammarData(EverydayLife);
-insertGrammarData(TimePhrases); */
-// * Get grammar data from database
-app.get("/getGrammarData",authenticateToken, async (req, res) => {
-  try {
-    const everydayLifeData = await Grammar.find({ category: "Everyday Life" });
-    const timePhrasesData = await Grammar.find({ category: "Time Phrases" });
-
-    if (!everydayLifeData || !timePhrasesData) {
-      throw new Error("Not all data could be retrieved.");
-    }
-
-    res.json({
-      EverydayLife: everydayLifeData,
-      TimePhrases: timePhrasesData,
-    });
-  } catch (error) {
-    console.error("Error: ", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-app.get("/lessonProgress/:userId/:lessonId",authenticateToken, async (req, res) => {
-  const { userId, lessonId } = req.params;
-
-  try {
-    const user = await User.findOne({ _id: userId });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    // Check if progress data exists
-    if (!user.progressGrammar) {
-      return res.status(404).json({ error: "progressGrammar not found" });
-    }
-
-    // Check if the lesson already exists in the progress
-    const existingLessonIndex = user.progressGrammar.lessons.findIndex(
-      (lesson) =>
-        lesson.lessonId !== null && lesson.lessonId.toString() === lessonId
-    );
-
-    // * If the lesson does not exist, add it
-    if (existingLessonIndex === -1) {
-      user.progressGrammar.lessons.push({
-        lessonId: lessonId,
-        tasks: [],
-        completed: false,
-      });
-
-      const lessonProgress = user.progressGrammar.lessons[0];
-      try {
-        await user.save();
-        return res.json(lessonProgress);
-      } catch (error) {
-        console.error("Fehler beim Speichern des Benutzers:", error);
-        return res.status(500).json({ error: "Interner Serverfehler" });
-      }
-    }
-
-    const lessonProgress = user.progressGrammar.lessons[existingLessonIndex];
-
-    res.json(lessonProgress);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-app.put("/updateLessonCompletion", async (req, res) => {
-  const { userId, lessonId, taskId } = req.body;
-
-  try {
-    const user = await User.findOne({ _id: userId });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    if (!user.progressGrammar) {
-      return res.status(404).json({ error: "progressGrammar not found" });
-    }
-
-    const existingLessonIndex = user.progressGrammar.lessons.findIndex(
-      (lesson) =>
-        lesson.lessonId !== null && lesson.lessonId.toString() === lessonId
-    );
-
-    if (existingLessonIndex === -1) {
-      return res.status(404).json({ error: "Lesson not found" });
-    }
-
-    user.progressGrammar.lessons[existingLessonIndex].completed = true;
-
-    // Speichern Sie die Aktualisierung in der Datenbank
-    const updatedUser = await user.save();
-
-    res.json(updatedUser);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-app.put("/removeLessonCompletion", async (req, res) => {
-  const { userId, lessonId, taskId } = req.body;
-
-  try {
-    const user = await User.findOne({ _id: userId });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    if (!user.progressGrammar) {
-      return res.status(404).json({ error: "progressGrammar not found" });
-    }
-
-    const existingLessonIndex = user.progressGrammar.lessons.findIndex(
-      (lesson) =>
-        lesson.lessonId !== null && lesson.lessonId.toString() === lessonId
-    );
-
-    if (existingLessonIndex === -1) {
-      return res.status(404).json({ error: "Lessons not found" });
-    }
-
-    user.progressGrammar.lessons[existingLessonIndex].completed = false;
-
-    // Speichern Sie die Aktualisierung in der Datenbank
-    const updatedUser = await user.save();
-
-    res.json(updatedUser);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
+app.get("/user", authenticateToken, userController.getUser);
+app.post("/biography", authenticateToken, userController.updateBiography);
+app.get("/getGrammarData",authenticateToken, grammarController.getGrammarData);
+app.get("/lessonProgress", authenticateToken, lessonController.getLessonProgress);
+app.put("/updateLessonCompletion", authenticateToken, lessonController.updateLessonCompletion);
+app.put("/removeLessonCompletion", authenticateToken, lessonController.removeLessonCompletion);
 //Vocabulary Routes
 app.get("/getAllVocabulary", vocabularyController.getAll);
 app.get("/getFilteredVocabulary", vocabularyController.getFilteredVocabulary);
@@ -766,12 +452,3 @@ app.post("/updateCollection", vocabularyCollectionController.updateCollection);
 
 app.get("/getAllTags", tagController.getAll);
 app.post("/createTag", tagController.createTag);
-
-/**
- * @route GET /api
- */
-app.get("/api", (req, res) => {
-  res.json({
-    users: ["user1 from backend", "user2 from backend", "user3 from backend"],
-  });
-});

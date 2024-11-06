@@ -20,24 +20,5 @@ const getGrammarData = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-// * Was needed to insert data into the database, while the database was local
-// * Not needed anymore
-async function insertGrammarData(jsonData) {
-  try {
-    const categoryData = jsonData[Object.keys(jsonData)[0]][0];
-    const existingData = await Grammar.findOne({ category: categoryData.category, level: categoryData.level });
 
-    if (existingData) {
-      console.log(`Category (${categoryData.category}, ${categoryData.level}) already exists. Skipping insertion.`);
-    } else {
-      await Grammar.create(categoryData);
-      console.log(`Category (${categoryData.category}, ${categoryData.level}) inserted successfully.`);
-    }
-  } catch (error) {
-    console.error('Error inserting data:', error);
-  } finally {
-    /*  mongoose.disconnect(); */
-  }
-}
-
-module.exports = { getGrammarData, insertGrammarData };
+module.exports = { getGrammarData };
