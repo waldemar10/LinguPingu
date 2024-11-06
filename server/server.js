@@ -41,7 +41,7 @@ const corsOptions = {
   credentials: true,
 };
 app.use(cors(corsOptions));
-
+app.options('*', cors(corsOptions));
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
