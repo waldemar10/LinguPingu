@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import process from 'process';
 import i18next from "i18next";
 import { I18nextProvider } from "react-i18next";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -23,6 +24,8 @@ import profile_de from "./translations/de/profile.json";
 import profile_en from "./translations/en/profile.json";
 import games_de from "./translations/de/games.json";
 import games_en from "./translations/en/games.json";
+import grammarhub_de from "./translations/de/grammarHub.json";
+import grammarhub_en from "./translations/en/grammarHub.json";
 
 const appLanguage = localStorage.getItem("appLanguage");
 
@@ -36,6 +39,7 @@ i18next.init({
       mainPages: mainPages_en,
       profile: profile_en,
       games: games_en,
+      grammarHub: grammarhub_en,
     },
     de: {
       collection: collection_de,
@@ -43,6 +47,7 @@ i18next.init({
       mainPages: mainPages_de,
       profile: profile_de,
       games: games_de,
+      grammarHub: grammarhub_de,
     },
   },
 });
