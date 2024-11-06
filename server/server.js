@@ -36,7 +36,8 @@ if (!publicKey || !privateKey) {
 webPush.setVapidDetails("mailto:your@email.com", publicKey, privateKey);
 
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000',
+  'https://lingupingu.onrender.com'],
   credentials: true,
 };
 app.use(cors(corsOptions));
