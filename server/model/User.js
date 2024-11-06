@@ -1,41 +1,7 @@
-const { Int32 } = require("mongodb");
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 bcrypt = require("bcrypt");
 SALT_WORK_FACTOR = 10;
-
-const ProgressSchema = new Schema({
-  grammar: {
-    type: Schema.Types.ObjectId,
-    ref: "Grammar",
-    default: null,
-  },
-  lessons: [
-    {
-      lessonId: {
-        type: Schema.Types.ObjectId,
-        ref: "Grammar.lessons",
-        default: null,
-      },
-      tasks: [
-        {
-          taskId: {
-            type: Schema.Types.ObjectId,
-            default: null,
-          },
-          completed: {
-            type: Boolean,
-            default: false,
-          },
-        },
-      ],
-      completed: {
-        type: Boolean,
-        default: false,
-      },
-    },
-  ],
-});
 
 const UserSchema = new Schema({
   email: {
@@ -66,11 +32,16 @@ const UserSchema = new Schema({
   },
   token:{
     type: String,
-    required: true,
+    required: false,
   },
   country: {
     type: String,
     default: "",
+    required: false,
+  },
+  appLanguage:{
+    type: String,
+    default: "de",
     required: false,
   },
   nativeLanguage: {
@@ -121,24 +92,12 @@ const UserSchema = new Schema({
       "https://res.cloudinary.com/drfeiriuk/image/upload/f_auto,q_auto/v1/LinguPingu/ProfilePictures/000/512",
     required: false,
   },
-  progressGrammar: {
-    type: ProgressSchema,
-    default: {
-      grammar: null,
-      lessons: [
-        {
-          lessonId: null,
-          tasks: [
-            {
-              taskId: null,
-              completed: false,
-            },
-          ],
-          completed: false,
-        },
-      ],
-    },
-  },
+  completedLessons: {
+    type: Array,
+    of: String,
+    default:[],
+    required: false,
+  },  
 });
 
 /**
