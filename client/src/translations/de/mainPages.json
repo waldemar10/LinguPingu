@@ -7,6 +7,12 @@
         "registerButton":"Konto erstellen",
         "loginButton": "Ich habe schon ein Konto"
     },
+    "homePage":{
+        "grammarHeadline": "Grammatik",
+        "vocabularyHeadline": "Vokabeln",
+        "gamesHeadline": "Spiele",
+        "verificationText": "Ihr Konto ist noch nicht verifiziert! Bitte überprüfen Sie Ihre E-Mails, um Ihr Konto zu verifizieren."
+    },
     "timeAttack": {
         "slogan": "Geh auf eine Abenteuer mit den Punguinen. Die Zeit läuft, watschle zum Sieg!"
     },

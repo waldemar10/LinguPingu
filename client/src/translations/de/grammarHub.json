@@ -1,0 +1,18 @@
+{
+    "headers":{
+        "timePhrase":"Die Zeitangabe",
+        "everydayLife": "Der Alltag"
+    },
+    "grammarTitle":"Grammatik",
+    "translationSentence":"Übersetze den Satz",
+    "completion":{
+        "message":"Du hast den Grammatikabschnitt abgeschlossen!",
+        "button":"Zurück zur Grammatik",
+        "title":"Gut gemacht!"
+    },
+    "completed":"Abgeschlossen",
+    "lessonRepeat":"Lektion wiederholen",
+    "lessonStart":"Lektion starten",
+    "back":"Zurück",
+    "backToExplanation":"Zurück zur Erklärung"
+}

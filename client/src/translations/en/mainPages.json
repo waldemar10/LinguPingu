@@ -7,6 +7,12 @@
         "registerButton":"Create Account",
         "loginButton": "Sign In"
     },
+    "homePage":{
+        "grammarHeadline": "Grammar",
+        "vocabularyHeadline": "Vocabulary",
+        "gamesHeadline": "Games",
+        "verificationText": "Your account is not yet verified! Please check your emails to verify your account."
+    },
     "timeAttack": {
         "slogan": "Gon on a vocabulary adventure with the penguins! Time is ticking, waddle towards success!"
     },

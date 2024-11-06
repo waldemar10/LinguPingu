@@ -1,0 +1,18 @@
+{
+    "headers":{
+        "timePhrase":"The time phrases",
+        "everydayLife": "The everyday life"
+    },
+    "grammarTitle":"Grammar",
+    "translationSentence":"Translate the sentence",
+    "completion":{
+        "message":"You have completed the grammar section!",
+        "button":"Back to Grammar",
+        "title":"Well done!"
+    },
+    "completed":"Completed",
+    "lessonRepeat":"Repeat lesson",
+    "lessonStart":"Start lesson",
+    "back":"Back",
+    "backToExplanation":"Back to explanation"
+}
