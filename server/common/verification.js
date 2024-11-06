@@ -1,8 +1,18 @@
-function getUserId(req) {
-  const bearerToken = req.headers.authorization;
-  const token = bearerToken.split(" ");
+const jwt = require("jsonwebtoken");
 
-  return token[1];
+
+function getUserId(req) {
+  const token = req.cookies.token; 
+  if (!token) {
+    throw new Error("Authentication token not found");
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); 
+    return decoded.userId;
+  } catch (error) {
+    throw new Error("Invalid or expired token");
+  }
 }
 
 module.exports = getUserId;
