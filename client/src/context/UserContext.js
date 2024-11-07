@@ -1,38 +1,21 @@
-import React, { useEffect } from "react";
-
+import React,{useState} from "react";
 // * Exports the UserContext and UserProvider.
 export const UserContext = React.createContext();
 export const UserProvider = ({ children }) => {
-  // * The user state stores the user data.
-  const [user, setUser] = React.useState(null);
-
-  // * Functions to login and logout the user.
-  const login = (userData) => setUser(userData);
-  const logout = () => setUser(null);
-
-  // * reloadUser() is used to reload the user from local storage.
-  const reloadUser = () => {
-    const data = localStorage.getItem("user");
-    if (data) {
-      setUser(JSON.parse(data));
+  const [id, setId] = useState(-1);
+  const logout = async () => {
+    try {
+      await fetch(`${process.env.REACT_APP_SERVER_URI}/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      sessionStorage.clear();
+    } catch (error) {
+      console.error("Logout failed:", error);
     }
   };
 
-  // * userEffect() is used to load the user from local storage after the page is loaded / refreshed.
-  useEffect(() => {
-    console.log("UserProvider.js: useEffect()");
-    // * The User is loaded from local storage.
-    const data = localStorage.getItem("user");
-    if (data) {
-      login(JSON.parse(data));
-      console.log("User loaded from local storage:", JSON.parse(data));
-    }
-  }, []);
-
-  // * The UserContext provides the user data and login/logout functions to all child components.
   return (
-    <UserContext.Provider value={{ user, login, logout, setUser, reloadUser }}>
-      {children}
-    </UserContext.Provider>
+    <UserContext.Provider value={{ logout, id ,setId }}>{children}</UserContext.Provider>
   );
 };

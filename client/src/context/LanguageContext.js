@@ -1,27 +1,15 @@
 import React, { createContext, useState, useContext } from 'react';
 
-const LanguageContext = createContext();
+export const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
-  const [targetLanguage, setTargetLanguage] = useState();
+  const [learningLanguage, setLearningLanguage] = useState();
   const [nativeLanguage, setNativeLanguage] = useState();
-
-  const setLanguages = (target, native) => {
-    setTargetLanguage(target);
-    setNativeLanguage(native);
-  };
+  const [appLanguage, setAppLanguage] = useState();
 
   return (
-    <LanguageContext.Provider value={{ targetLanguage, nativeLanguage, setLanguages }}>
+    <LanguageContext.Provider value={{ learningLanguage, nativeLanguage, setNativeLanguage, setLearningLanguage,appLanguage,setAppLanguage }}>
       {children}
     </LanguageContext.Provider>
   );
-};
-
-export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
 };
