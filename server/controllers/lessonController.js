@@ -11,7 +11,7 @@ async function getLessonProgress(req, res) {
 
     if (!user.completedLessons || user.completedLessons.length === 0) {
       console.warn(`User ${userId} has no completed lessons`);
-      return res.status(404).json({ error: "No completed lessons found" });
+      return res.json({ completedLessons: [] });
     }
 
     console.log(`User ${userId} completed lessons:`, user.completedLessons);
