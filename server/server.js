@@ -337,7 +337,7 @@ app.post("/registration", async (req, res) => {
       });
     }
     // * Sends a verification email to the user.
-    await sendMail(email, verificationToken);
+    /* await sendMail(email, verificationToken); */
     // * Erstellt einen neuen Benutzer.
     await User.create({
       username: username,
