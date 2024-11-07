@@ -168,7 +168,7 @@ const HomePage = () => {
          * The header is only displayed if the user is logged in and the account is not yet verified.
          * It can be closed by clicking on the close button.
          */}
-        {sessionStorage.getItem("verified") && showHeader && (
+        {/* sessionStorage.getItem("verified") && showHeader && (
           <div
             className="alert-width alert alert-v2 alert-warning d-inline-flex justify-content-between align-items-center py-2"
             role="alert"
@@ -181,7 +181,7 @@ const HomePage = () => {
               className="btn-close"
               onClick={() => setShowHeader(false)}></button>
           </div>
-        )}
+        ) */}
 
         {/**
          * Big "LinuPingu" headline of the Home page.
