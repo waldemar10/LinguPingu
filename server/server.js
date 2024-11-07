@@ -105,7 +105,7 @@ app.post("/refreshToken", authenticateToken, (req, res) => {
   res.cookie('token', newToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Strict',
+    sameSite: 'none',
     maxAge: 3600000, // 1 Stunde
   });
   res.json({ success: true, message: "Token refreshed" });
@@ -173,7 +173,7 @@ app.post("/login", async (req, res) => {
           res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production', 
-            sameSite: 'Strict', 
+            sameSite: 'none', 
             maxAge: 3600000, 
           });
 
