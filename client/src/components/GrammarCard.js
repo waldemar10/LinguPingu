@@ -1,17 +1,10 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect,useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useLanguage } from "../context/LanguageContext";
-import {
-  openDatabase,
-  addObjectToStore,
-  getObjectFromStore,
-  updateObjectInStore,
-} from "../utils/indexedDB";
-
+import { UserContext } from "../context/UserContext";
 import happyPingu from "../images/PinguIcons/happyPingu.png";
 import sadPingu from "../images/PinguIcons/sadPingu.png";
 import "../styles/Grammar.css";
-
+import { useTranslation } from "react-i18next";
 const GERMAN = "de";
 const ENGLISH = "en";
 // Shuffle array function
@@ -62,6 +55,7 @@ const createErrorWordArray = (errorWords, targetLanguage) => {
 var counterForClickedWords = 0;
 
 function GrammarCard({ title, content, data, passIsFinished }) {
+  const [t] = useTranslation("grammarHub");
   const { lessonIndex, grammarIndex } = useParams();
   const [randomItem, setRandomItem] = useState(null);
   const [selectedWords, setSelectedWords] = useState([]);
@@ -70,65 +64,23 @@ function GrammarCard({ title, content, data, passIsFinished }) {
   const [isRight, setIsRight] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-
-  const { targetLanguage, nativeLanguage } = useLanguage();
-
+  const { id, setId } = useContext(UserContext);
   const navigate = useNavigate();
-  const userData = JSON.parse(localStorage.getItem("user"));
 
-  let languageKey = userData.learningLanguages[0];
-
-  if (
-    targetLanguage !== "en" &&
-    targetLanguage !== "de" &&
-    targetLanguage !== "gb"
-  ) {
-    languageKey = "en";
+  let languageKey = "en"; // Default language key
+  let nativeLanguageKey = "en"; // Default native language key
+  if (localStorage.getItem(`${id}_learningLanguages`) !== null) {
+    languageKey = localStorage.getItem(`${id}_learningLanguages`);
+    if (languageKey === "gb") {
+      languageKey = "en";
+    }
   }
-  if(targetLanguage === "gb"){
-    languageKey = "en";
-  }
-  let nativeLanguageKey = userData.nativeLanguage[0];
-
-  if (
-    nativeLanguage !== "en" &&
-    nativeLanguage !== "de" &&
-    nativeLanguage !== "gb"
-  ) {
-    nativeLanguageKey = "en";
-  }
-  if(nativeLanguage === "gb"){
-    nativeLanguageKey = "en";
+  if (localStorage.getItem(`${id}_nativeLanguage`) !== null) {
+    nativeLanguageKey = localStorage.getItem(`${id}_nativeLanguage`);
   }
 
   const shuffleContent = useMemo(() => shuffleArray(content), [content]);
 
-  // Store completed lessons in indexedDB
-  const initializeDatabase = async (key, data) => {
-    try {
-      const db = await openDatabase();
-
-      const objectId = key;
-      /*  await deleteObjectFromStore(db, 'myObjectStore', 2); */
-      const existingData = await getObjectFromStore(db, "myObjectStore", key);
-      // * Check if the data is already in the store
-      if (existingData) {
-        // Update data in store
-        existingData.data = data;
-        await updateObjectInStore(db, "myObjectStore", existingData);
-      }
-      // * If the data is not in the store
-      else {
-        // Add data to store
-        await addObjectToStore(db, "myObjectStore", {
-          id: objectId,
-          data: data,
-        });
-      }
-    } catch (error) {
-      console.error("Error initializing database:", error);
-    }
-  };
 
   const updateVisibleWords = () => {
     if (shuffleContent.length > 0) {
@@ -219,12 +171,27 @@ function GrammarCard({ title, content, data, passIsFinished }) {
             )
           );
         } catch (error) {
-          // No more items in the array
-          // Show the completion message
           setIsFinished(true);
           passIsFinished(true);
-          initializeDatabase(data[lessonIndex].lessons[grammarIndex]._id, true);
-          updateLessonCompletion();
+          let completedLessons =
+            JSON.parse(localStorage.getItem(`${id}_completedLessons`)) || [];
+
+          if (
+            !completedLessons.includes(
+              data[lessonIndex].lessons[grammarIndex].title_en
+            )
+          ) {
+            completedLessons.push(
+              data[lessonIndex].lessons[grammarIndex].title_en
+            );
+            localStorage.setItem(
+              `${id}_completedLessons`,
+              JSON.stringify(completedLessons)
+            );
+          }
+          updateLessonCompletion(
+            data[lessonIndex].lessons[grammarIndex].title_en
+          );
         }
       }, 1500);
     } else {
@@ -249,46 +216,23 @@ function GrammarCard({ title, content, data, passIsFinished }) {
     counterForClickedWords = 0;
   };
 
-  const getTranslationSentence = () => {
-    const translationSentences = {
-      de: "Übersetze den Satz: ",
-      en: "Translate the sentence: ",
-    };
-
-    return translationSentences[nativeLanguageKey] || translationSentences.en;
-  };
-  const getCompletionMessage = () => {
-    const completionMessages = {
-      de: {
-        title: "Gut gemacht!",
-        message: "Du hast die Lektion abgeschlossen!",
-        button: "Zurück zur Grammatik",
-      },
-      en: {
-        title: "Well done!",
-        message: "You have finished the lesson!",
-        button: "Back to Grammar",
-      },
-    };
-
-    return completionMessages[nativeLanguageKey] || completionMessages.en;
-  };
   // Update the lesson completion
-  const updateLessonCompletion = async () => {
-    const lessonId = data[lessonIndex].lessons[grammarIndex]._id;
-    const userId = userData._id;
+  const updateLessonCompletion = async (title_en) => {
 
     try {
-      await fetch("http://localhost:5000/updateLessonCompletion", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: userId,
-          lessonId: lessonId,
-        }),
-      });
+      await fetch(
+        `${process.env.REACT_APP_SERVER_URI}/updateLessonCompletion`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title_en: title_en,
+          }),
+          credentials: "include",
+        }
+      );
     } catch (error) {
       console.error("Error when setting completed to true:", error);
     }
@@ -302,28 +246,25 @@ function GrammarCard({ title, content, data, passIsFinished }) {
           <div
             className={`bg-light p-3 rounded text-dark position-relative ${
               isWrong ? "wrong" : ""
-            } ${isRight ? "right" : ""}`}
-          >
+            } ${isRight ? "right" : ""}`}>
             <div>
               <p>
                 <big>{randomItem[nativeLanguageKey]}</big>
               </p>
               <p>
-                <small>{getTranslationSentence()}</small>
+                <small>{t("translationSentence")}</small>
               </p>
               <div>
                 <div>
                   <span
                     className={`placeholder ${
                       counterForClickedWords > 0 ? "hidden" : ""
-                    }`}
-                  ></span>
+                    }`}></span>
                   {selectedWords.map((word, index) => (
                     <button
                       className="btn-selected-word"
                       key={index}
-                      onClick={() => handleSelectedWordClick(word)}
-                    >
+                      onClick={() => handleSelectedWordClick(word)}>
                       {word}
                     </button>
                   ))}
@@ -343,8 +284,7 @@ function GrammarCard({ title, content, data, passIsFinished }) {
                   <button
                     className="btn-select-word"
                     key={index}
-                    onClick={() => handleWordClick(word)}
-                  >
+                    onClick={() => handleWordClick(word)}>
                     {word}
                   </button>
                 ))}
@@ -353,8 +293,7 @@ function GrammarCard({ title, content, data, passIsFinished }) {
             <button
               className="btn btn-primary"
               onClick={checkAnswer}
-              disabled={isButtonDisabled}
-            >
+              disabled={isButtonDisabled}>
               Check
             </button>
           </div>
@@ -362,15 +301,14 @@ function GrammarCard({ title, content, data, passIsFinished }) {
       </div>
 
       <div className={`g-box text-center ${isFinished ? "" : "hidden"}`}>
-        <h1>{getCompletionMessage().title}</h1>
+        <h1>{t("completion.title")}</h1>
         <div className="d-flex flex-column align-items-center bg-light p-3 rounded text-dark ">
-          <p>{getCompletionMessage().message}</p>
+          <p>{t("completion.message")}</p>
           <img className="g-img-finished m-2" src={happyPingu}></img>
           <button
             className="btn btn-primary"
-            onClick={() => navigate("/grammar")}
-          >
-            {getCompletionMessage().button}
+            onClick={() => navigate("/grammar")}>
+            {t("completion.button")}
           </button>
         </div>
       </div>

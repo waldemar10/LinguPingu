@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "../../context/LanguageContext";
+import { LanguageContext } from "../../context/LanguageContext";
 import { useData, useSelectedTab } from "../../context/DataContext";
 import NavigationBar from "../../components/NavigationBar";
 
@@ -14,114 +14,51 @@ import {
 } from "../../utils/indexedDB";
 import "../../styles/Grammar.css";
 import { useTranslation } from "react-i18next";
-
+import { UserContext } from "../../context/UserContext";
 function GrammarHub() {
-  const [t, i18next] = useTranslation();
+  const [t] = useTranslation("grammarHub");
   const { selectedTab, setSelectedTab } = useSelectedTab();
-  const { targetLanguage, setLanguages } = useLanguage();
+  const [loadingUser, setLoadingUser] = useState(false);
+  const [loadingGrammarData, setLoadingGrammarData] = useState(true);
   const { loadedData, setLoadedData } = useData();
   const [data, setData] = useState();
   const [completedLessons, setCompletedLessons] = useState([]);
-  const nativeLanguage = i18next.language;
+  const { id, setId } = useContext(UserContext);
+  const {appLanguage, setAppLanguage} = useContext(LanguageContext);
 
   const navigate = useNavigate();
 
-  const userData = JSON.parse(localStorage.getItem("user"));
-  const userId = userData ? userData._id : null;
-
-  useEffect(() => {
-    const userLearningLanguage = userData
-      ? userData.learningLanguages[0]
-      : "en";
-    let userNativeLanguage = "de";
-    if (userData.selectedFlag !== undefined) {
-      if (userData.selectedFlag === "gb") {
-        userNativeLanguage = "en";
-        /* console.log(userData.selectedFlag) */
-      } else {
-        userNativeLanguage = userData ? userData.selectedFlag : "de";
-        /* console.log(userData.selectedFlag) */
-      }
-    } else {
-      userNativeLanguage = userData ? userData.nativeLanguage[0] : "de";
-    }
-    setLanguages(userLearningLanguage, userNativeLanguage);
-
-    const arr = [
-      {
-        targetLanguage: userLearningLanguage,
-        nativeLanguage: userNativeLanguage,
-      },
-    ];
-
-    if (arr !== null && arr !== undefined) {
-      localStorage.setItem("language", JSON.stringify(arr));
-      fetchData();
-    }
-  }, [setLanguages, nativeLanguage, targetLanguage]);
-
-  useEffect(() => {
-    if (loadedData !== null && loadedData !== undefined) {
-      const fetchCompletedLessons = async () => {
-        const completedLessonsData = [];
-
-        for (const lesson of loadedData) {
-          for (const grammar of lesson.lessons) {
-            const isCompleted = await checkCompletion(userId, grammar._id);
-            // * Check if the lesson is completed
-            if (isCompleted) {
-              // * Add the lesson to the completedLessons array
-              completedLessonsData.push(grammar[titleKey]);
-            }
-          }
-        }
-
-        setCompletedLessons(completedLessonsData);
-      };
-
-      fetchCompletedLessons();
-    }
-  }, [userId, loadedData]);
-
-  // * Fetch gramamr data from the server
-  const fetchData = async (retryCount = 3) => {
+  const fetchUserData = async () => {
+    setLoadingUser(true);
     try {
-      const response = await fetch("http://localhost:5000/getGrammarData", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/user`, {
+        method: 'GET',
+        credentials: 'include',
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json();
+      const data = await response.json();
 
-      if (result === null && retryCount > 0) {
-        await fetchData(retryCount - 1);
-      } else {
-        setData(result);
-      }
+      setAppLanguage(data.appLanguages);
+
     } catch (error) {
       console.error("Fetch error:", error);
-      const dbData = await handleIndexedDB();
-      if (dbData !== undefined && dbData !== null) {
-        setData(dbData);
-      }
+    } finally{
+      setLoadingUser(false);
     }
   };
+  
+  useEffect(()=>{
+    if(!localStorage.getItem(`${id}_appLanguage`)){
+      fetchUserData();
+    }else{
+      setAppLanguage(localStorage.getItem(`${id}_appLanguage`));
+    }
+  },[])
 
-  const handleIndexedDB = async () => {
-    try {
-      const db = await openDatabase();
-      const existingData = await getObjectFromStore(db, "myObjectStore", 1);
-      return existingData.data;
-    } catch (error) {
-      console.error("IndexedDB-Fehler:", error);
-    }
-  };
   const initializeDatabase = async (key, data) => {
     try {
       const db = await openDatabase();
@@ -145,33 +82,121 @@ function GrammarHub() {
       console.error("Error initializing database:", error);
     }
   };
-  // * Set the loaded data
-  useEffect(() => {
+  const handleIndexedDB = async () => {
     try {
-      if (data !== undefined && data !== null) {
-        initializeDatabase(1, data);
-        if (selectedTab === "timePhrase") {
-          setLoadedData(data.TimePhrases);
-        } else if (selectedTab === "everydayLife") {
-          setLoadedData(data.EverydayLife);
-        } else {
-          setLoadedData(data.TimePhrases);
-        }
+      const db = await openDatabase();
+      const existingData = await getObjectFromStore(db, "myObjectStore", 1);
+      if (!existingData) {
+        return null;
       }
+      return existingData.data;
     } catch (error) {
-      console.error("An error occurred:", error);
+      console.error("IndexedDB-Fehler:", error);
     }
-  }, [data, selectedTab]);
+  };
+// * Fetch gramamr data from the server
+const fetchData = async (retryCount = 3) => {
+  try {
+    const dbData = await handleIndexedDB();
+    if(dbData){
+      setData(dbData);
+      setLoadingGrammarData(false);
+      return;
+    }else{
+    setLoadingGrammarData(true);
+    const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/getGrammarData`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: 'include',
+    });
 
-  const headers = {
-    de: {
-      timePhrase: "Die Zeitangaben",
-      everydayLife: "Der Alltag",
-    },
-    en: {
-      timePhrase: "The time phrases",
-      everydayLife: "The everyday life",
-    },
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (result === null && retryCount > 0) {
+      await fetchData(retryCount - 1);
+    } else {
+
+      initializeDatabase(1, result);
+      setData(result);
+      setLoadingGrammarData(false);
+    }
+  }
+  } catch (error) {
+    console.error("Fetch error:", error);
+  }
+};
+// * Set the loaded data
+useEffect(() => {
+  try {
+    if(data){
+    switch(selectedTab){
+      case "timePhrase":
+        setLoadedData(data.TimePhrases);
+        break;
+      case "everydayLife":
+        setLoadedData(data.EverydayLife);
+        break;
+      default:
+        setLoadedData(data.TimePhrases);
+        break;
+    }
+  }
+  } catch (error) {
+    console.error("An error occurred:", error);
+  }
+}, [selectedTab,data]);
+
+const getCompletedLessons = async () => {
+  try {
+    if(localStorage.getItem(`${id}_completedLessons`)){
+      setCompletedLessons(localStorage.getItem(`${id}_completedLessons`));
+      return;
+    }
+    const response = await fetch(
+      `${process.env.REACT_APP_SERVER_URI}/lessonProgress`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include',
+      }
+    );
+    
+    if (response.status === 404) {
+      console.error("Resource not found:", response.status);
+      return;
+    }
+
+    if (response.ok) {
+      const lessonProgressData = await response.json();
+      if(lessonProgressData){
+        setCompletedLessons(lessonProgressData);
+        localStorage.setItem(`${id}_completedLessons`, JSON.stringify(lessonProgressData));
+      }
+    } else {
+      console.error("Error fetching data:", response.status);
+    }
+  } catch (error) {
+    console.error("Error:", error);
+  }
+};
+
+  useEffect(() => {
+    fetchData();
+    getCompletedLessons();
+  }, []);
+
+  
+
+  const handleTabChange = (tab) => {
+    setSelectedTab(tab);
   };
   const title = {
     de: "title_de",
@@ -181,29 +206,20 @@ function GrammarHub() {
     de: "subtitle_de",
     en: "subtitle_en",
   };
-  const completed = {
-    de: "Abgeschlossen",
-    en: "Completed",
-  };
-  const grammarTitle = {
-    de: "Grammatik",
-    en: "Grammar",
-  };
 
-  const titleKey = title[nativeLanguage] || "title_en";
-  const subtitleKey = subtitle[nativeLanguage] || "subtitle_en";
-  const grammarTitleKey = grammarTitle[nativeLanguage] || "Grammar";
+  const titleKey = title[appLanguage] || "title_en";
+  const subtitleKey = subtitle[appLanguage] || "subtitle_en";
 
-  let headersTimePhraseKey = "The time phrases";
-  if (headers[nativeLanguage] !== undefined) {
-    headersTimePhraseKey =
-      headers[nativeLanguage]["timePhrase"] || "The time phrases";
-  }
-
-  let headersEverydayLifeKey = "The everyday life";
-  if (headers[nativeLanguage] !== undefined) {
-    headersEverydayLifeKey =
-      headers[nativeLanguage]["everydayLife"] || "The everyday life";
+  if (loadingGrammarData) {
+    return (
+      <div className=" vh-100 d-flex flex-column align-items-center justify-content-center">
+        <div
+          className="spinner-border text-primary "
+          style={{ width: "6rem", height: "6rem" }}
+        ></div>
+        {loadingGrammarData && <p className="text-light">Loading Grammar...</p>}
+      </div>
+    );
   }
 
   // * Open the grammar card
@@ -229,72 +245,17 @@ function GrammarHub() {
     }
   };
 
-  const handleTabChange = (tab) => {
-    setSelectedTab(tab);
-  };
-  // * Check if the lesson is completed.
-  const checkCompletion = async (userId, lessonId) => {
-    try {
-      const db = await openDatabase();
-      const existingData = await getObjectFromStore(
-        db,
-        "myObjectStore",
-        lessonId
-      );
+  
 
-      if (existingData !== undefined && existingData !== null) {
-        return true;
-      } else {
-        const response = await fetch(
-          `http://localhost:5000/lessonProgress/${userId}/${lessonId}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        if (response.status === 404) {
-          console.error("Resource not found:", response.status);
-          return false;
-        }
-
-        if (response.ok) {
-          const lessonProgressData = await response.json();
-
-          if (
-            lessonProgressData &&
-            lessonProgressData.completed !== undefined
-          ) {
-            /* initializeDatabase(lessonProgressData.lessonId,lessonProgressData.completed) */
-
-            if (lessonProgressData.completed === true) {
-              return true;
-            } else {
-              return false;
-            }
-          } else {
-            console.error("Empty Lessons");
-            return false;
-          }
-        } else {
-          console.error("Error fetching data:", response.status);
-          return false;
-        }
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      return false;
-    }
-  };
-
-  if (loadedData === null || loadedData === undefined) {
+  if (loadedData === null || loadedData === undefined || loadingUser) {
     return (
       <div className=" vh-100 d-flex align-items-center justify-content-center">
         <div
           className="spinner-border text-primary "
           style={{ width: "6rem", height: "6rem" }}
         ></div>
+        {loadingUser && <p className="text-light">Loading User...</p>}
+        {loadedData === undefined && <p className="text-light">Loading Data...</p>}
       </div>
     );
   }
@@ -306,7 +267,7 @@ function GrammarHub() {
       <div className="g-box">
         <div className="d-flex justify-content-between align-items-center">
           <h1 className="mb-3 mt-5 display-4 user-select-none">
-            {grammarTitleKey}
+            {t("grammarTitle")}
           </h1>
         </div>
         <ul className="nav nav-pills">
@@ -319,7 +280,7 @@ function GrammarHub() {
               }`}
               onClick={() => handleTabChange("timePhrase")}
             >
-              {headersTimePhraseKey}
+              {t("headers.timePhrase")}
             </a>
           </li>
           <li className="nav-item g-hover">
@@ -329,7 +290,7 @@ function GrammarHub() {
               }`}
               onClick={() => handleTabChange("everydayLife")}
             >
-              {headersEverydayLifeKey}
+              {t("headers.everydayLife")}
             </a>
           </li>
         </ul>
@@ -345,7 +306,7 @@ function GrammarHub() {
                   key={grammar[titleKey]}
                   className={`d-flex justify-content-center align-items-center btn  bg-g-button m-2 w-100 position-relative
           ${
-            completedLessons.includes(grammar[titleKey])
+            completedLessons.includes(grammar.title_en)
               ? "btn-completed"
               : "btn-hover"
           }
@@ -369,7 +330,7 @@ function GrammarHub() {
                     <div className="row justify-content-between align-items-center">
                       <h4 className="col">{grammar[titleKey]}</h4>
 
-                      {completedLessons.includes(grammar[titleKey]) && (
+                      {completedLessons.includes(grammar.title_en) && (
                         <div className="completed col  g-completed-box">
                           <FontAwesomeIcon icon={faCircleCheck} size="2x" />
                         </div>

@@ -6,7 +6,7 @@ function Login() {
     const [loginData, setLoginData] = useState([]);
 
 useEffect(() => {
-    fetch("http://localhost:5000/users")
+    fetch(`${process.env.REACT_APP_SERVER_URI}/users`)
         .then((response) => response.json())
         .then((data) => {
             console.log('Data:', data);

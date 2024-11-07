@@ -5,7 +5,7 @@ import Flag from "react-world-flags";
 import { Container, Row, Col, Image } from "react-bootstrap";
 import { FaEdit } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
-
+import { useNavigate } from "react-router-dom";
 function ProfilePage() {
   const [t] = useTranslation("profile");
 
@@ -17,7 +17,33 @@ function ProfilePage() {
   const [nativeLanguage, setNativeLanguage] = useState();
   const [profilePicture512,setProfilePicture512] = useState();
   const [loadingUser, setLoadingUser] = useState(true);
+  const { id, setId } = useContext(UserContext);
+  const navigate = useNavigate();
+  const fetchProtectedData = async () => {
 
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_SERVER_URI}/protected`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      navigate("/landing");
+    } 
+  };
+  useEffect(() => {
+    fetchProtectedData();
+  }, []);
   const handleEditClick = () => {
     setIsEditing(true);
   };
@@ -47,9 +73,9 @@ function ProfilePage() {
       sessionStorage.setItem("profilePicture512", data.profilePicture512);
       sessionStorage.setItem("country", data.country);
       sessionStorage.setItem("verified", data.verified);
-      localStorage.setItem("learningLanguages", data.learningLanguages[0]);
-      localStorage.setItem("nativeLanguage", data.nativeLanguage[0]);
-      localStorage.setItem("appLanguage", data.nativeLanguage[0]);
+      localStorage.setItem(`${data._id}_learningLanguages`, data.learningLanguages[0]);
+      localStorage.setItem(`${data._id}_nativeLanguage`, data.nativeLanguage[0]);
+      localStorage.setItem(`${data._id}_appLanguage`, data.nativeLanguage[0]);
     } catch (error) {
       console.error("Fetch error:", error);
     } finally {
@@ -70,16 +96,16 @@ function ProfilePage() {
     if (sessionStorage.getItem("country") !== null) {
       setCountry(sessionStorage.getItem("country"));
     }
-    if (localStorage.getItem("learningLanguages") !== null) {
-      setLearningLanguage(localStorage.getItem("learningLanguages"));
+    if (localStorage.getItem(`${id}_learningLanguages`) !== null) {
+      setLearningLanguage(localStorage.getItem(`${id}_learningLanguages`));
     }
-    if (localStorage.getItem("nativeLanguage") !== null) {
-      setNativeLanguage(localStorage.getItem("nativeLanguage"));
+    if (localStorage.getItem(`${id}_nativeLanguage`) !== null) {
+      setNativeLanguage(localStorage.getItem(`${id}_nativeLanguage`));
     }
     if (
       !sessionStorage.getItem("username") ||
-      !localStorage.getItem("learningLanguages") ||
-      !localStorage.getItem("nativeLanguage") ||
+      !localStorage.getItem(`${id}_learningLanguages`) ||
+      !localStorage.getItem(`${id}_nativeLanguage`) ||
       !sessionStorage.getItem("profilePicture512") ||
       !sessionStorage.getItem("country")
     ) {

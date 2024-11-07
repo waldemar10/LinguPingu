@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import GrammarCard from "../../components/GrammarCard";
 import GreetingsContent from "../../components/GrammarLessons/EverdayLife/GreetingsContent";
@@ -7,9 +7,10 @@ import RestaurantOrder from "../../components/GrammarLessons/EverdayLife/Restaur
 import SimplePresent from "../../components/GrammarLessons/TimePhrases/SimplePresent";
 import SimplePast from "../../components/GrammarLessons/TimePhrases/SimplePast";
 import PresentPerfect from "../../components/GrammarLessons/TimePhrases/PresentPerfect";
-import { useLanguage } from "../../context/LanguageContext";
+import { LanguageContext } from "../../context/LanguageContext";
 import { useData, useSelectedTab } from "../../context/DataContext";
 import { useTranslation } from "react-i18next";
+import { UserContext } from "../../context/UserContext";
 
 import NavigationBar from "../../components/NavigationBar";
 
@@ -22,15 +23,82 @@ function Lessons() {
   const [onIsFinished, setOnIsFinished] = useState(false);
   const [selectedGrammar, setSelectedGrammar] = useState();
   const [showGrammarCard, setShowGrammarCard] = useState(false);
-  const { targetLanguage, setLanguages } = useLanguage();
+  const {appLanguage, learningLanguage,nativeLanguage,setAppLanguage, setLearningLanguage, setNativeLanguage } = useContext(LanguageContext);
+  const [loadingUser, setLoadingUser] = useState(false);
   const { loadedData, setLoadedData } = useData();
   const [isCompleted, setIsCompleted] = useState(false);
-  const [t, i18next] = useTranslation();
+  const { id, setId } = useContext(UserContext);
+  const [t] = useTranslation("grammarHub");
   const navigate = useNavigate();
-  const nativeLanguage = i18next.language;
+  const fetchProtectedData = async () => {
 
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_SERVER_URI}/protected`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      navigate("/landing");
+    } 
+  };
+  const getCompletedLessons = async () => {
+    try {
+      if(localStorage.getItem(`${id}_completedLessons`).includes(loadedData[lessonIndex].lessons[grammarIndex].title_en)){
+        setIsCompleted(true);
+        return;
+      }
+      const response = await fetch(
+        `${process.env.REACT_APP_SERVER_URI}/lessonProgress`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: 'include',
+        }
+      );
+      
+      if (response.status === 404) {
+        console.error("Resource not found:", response.status);
+        return;
+      }
+  
+      if (response.ok) {
+        const lessonProgressData = await response.json();
+        if(lessonProgressData.includes(loadedData[lessonIndex].lessons[grammarIndex].title_en)){
+          setIsCompleted(true);
+          localStorage.setItem(`${id}_completedLessons`, JSON.stringify(lessonProgressData));
+        }else{
+          setIsCompleted(false);
+        }
+      } else {
+        console.error("Error fetching data:", response.status);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
   useEffect(() => {
-    if (loadedData !== null && loadedData !== undefined) {
+    fetchProtectedData();
+    getCompletedLessons();
+    setSelectedGrammar(loadedData[lessonIndex].lessons[grammarIndex]);
+  }, []);
+ /*  useEffect(() => {
+    if (loadedData) {
+
+      console.log(lessonIndex)
+
       if (
         loadedData[lessonIndex].level &&
         loadedData[lessonIndex].lessons[grammarIndex].title_de
@@ -38,107 +106,59 @@ function Lessons() {
         const selectedGrammar = loadedData[lessonIndex].lessons[grammarIndex];
         setSelectedGrammar(selectedGrammar);
         checkCompletion(
-          userId,
-          loadedData[lessonIndex].lessons[grammarIndex]._id
+          loadedData[lessonIndex].lessons[grammarIndex].title_en
         ).then((completed) => {
           setIsCompleted(completed);
         });
       }
     }
-  }, [lessonIndex, grammarIndex, loadedData]);
+  }, [lessonIndex, grammarIndex, loadedData]); */
+  const fetchUserData = async () => {
+    setLoadingUser(true);
+    try {
+      const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/user`, {
+        method: 'GET',
+        credentials: 'include',
+      });
 
-  useEffect(() => {
-    const userLearningLanguage = userData
-      ? userData.learningLanguages[0]
-      : "en";
-    let userNativeLanguage = "de";
-    if (userData.selectedFlag !== undefined) {
-      if (userData.selectedFlag === "gb") {
-        userNativeLanguage = "en";
-      } else {
-        userNativeLanguage = userData ? userData.selectedFlag : "de";
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    } else {
-      userNativeLanguage = userData ? userData.nativeLanguage[0] : "de";
-    }
 
-    setLanguages(userLearningLanguage, userNativeLanguage);
-  }, [setLanguages, nativeLanguage, targetLanguage]);
+      const data = await response.json();
+
+      setLearningLanguage(data.learningLanguages);
+      setNativeLanguage(data.nativeLanguage);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    } finally{
+      setLoadingUser(false);
+    }
+  }; 
+  useEffect(()=>{
+    
+    if(localStorage.getItem(`${id}_learningLanguages`) !== null && learningLanguage === undefined){
+      setLearningLanguage(localStorage.getItem(`${id}_learningLanguages`));
+    }
+    if(localStorage.getItem(`${id}_nativeLanguage`) !== null && nativeLanguage === undefined){
+      setNativeLanguage(localStorage.getItem(`${id}_nativeLanguage`));
+    }
+    if(localStorage.getItem(`${id}_appLanguage`) !== null &&appLanguage === undefined){
+      setAppLanguage(localStorage.getItem(`${id}_appLanguage`));
+    }
+    
+    if(nativeLanguage === null || learningLanguage === null || appLanguage === null){
+      fetchUserData();
+    } 
+  },[])
 
   const title = {
     de: "title_de",
     en: "title_en",
   };
-  const completed = {
-    de: "Abgeschlossen",
-    en: "Completed",
-  };
-  const lessonRepeat = {
-    de: "Übung wiederholen",
-    en: "Repeat Lesson",
-  };
-  const lessonStart = {
-    de: "Übung starten",
-    en: "Start Lesson",
-  };
-  const back = {
-    de: "Zurück",
-    en: "Back",
-  };
-  const backToExplanation = {
-    de: "Zurück zur Erklärung",
-    en: "Back to Explanation",
-  };
-
-  const titleKey = title[i18next.language] || "title_en";
-  const lessonRepeatKey = lessonRepeat[i18next.language] || "Repeat Lesson";
-  const lessonStartKey = lessonStart[i18next.language] || "Start Lesson";
-  const backKey = back[i18next.language] || "Back";
-  const backToExplanationKey =
-    backToExplanation[i18next.language] || "Back to Explanation";
-
-  const userData = JSON.parse(localStorage.getItem("user"));
-  const userId = userData ? userData._id : null;
-
-  const checkCompletion = async (userId, lessonId) => {
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_SERVER_URI}/lessonProgress/${userId}/${lessonId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.status === 404) {
-        console.error("Resource not found:", response.status);
-        return false;
-      }
-
-      if (response.ok) {
-        const lessonProgressData = await response.json();
-
-        if (lessonProgressData && lessonProgressData.completed !== undefined) {
-          if (lessonProgressData.completed === true) {
-            return true;
-          } else {
-            return false;
-          }
-        } else {
-          console.error("Empty Lessons");
-          return false;
-        }
-      } else {
-        console.error("Error fetching data:", response.status);
-        return false;
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      return false;
-    }
-  };
+  
+  const titleKey = title[appLanguage] || "title_en";
+  
   const onClickGrammarCard = () => {
     setShowGrammarCard(!showGrammarCard);
   };
@@ -146,16 +166,7 @@ function Lessons() {
   const onClickBackGrammarHub = () => {
     navigate(`/grammar/`);
   };
-  // If languages are not set, get them from local storage
-  if (
-    nativeLanguage === undefined ||
-    nativeLanguage === null ||
-    targetLanguage === undefined ||
-    targetLanguage === null
-  ) {
-    const storedData = JSON.parse(localStorage.getItem("language"));
-    setLanguages(storedData[0].targetLanguage, storedData[0].nativeLanguage);
-  }
+
   useEffect(() => {
     if (loadedData === null || loadedData === undefined) {
       const timeoutId = setTimeout(() => {
@@ -165,14 +176,15 @@ function Lessons() {
       return () => clearTimeout(timeoutId);
     }
   }, [loadedData]);
-  // If the data is not loaded yet, display a spinner
-  if (loadedData === null || loadedData === undefined) {
+
+  if (loadingUser) {
     return (
       <div className=" vh-100 d-flex align-items-center justify-content-center">
         <div
           className="spinner-border text-primary "
           style={{ width: "6rem", height: "6rem" }}
         ></div>
+        {loadingUser && <p className="mt-3">Loading user data...</p>}
       </div>
     );
   }
@@ -194,33 +206,33 @@ function Lessons() {
               )}
             </div>
             <GreetingsContent
-              nativeLanguage={nativeLanguage}
-              targetLanguage={targetLanguage}
+              nativeLanguage={appLanguage}
+              targetLanguage={learningLanguage}
               isLesson={selectedGrammar.title_de === "Grundlegende Begrüßungen"}
             />
             <Introduction
-              nativeLanguage={nativeLanguage}
-              targetLanguage={targetLanguage}
+              nativeLanguage={appLanguage}
+              targetLanguage={learningLanguage}
               isLesson={selectedGrammar.title_de === "Vorstellung"}
             />
             <RestaurantOrder
-              nativeLanguage={nativeLanguage}
-              targetLanguage={targetLanguage}
+              nativeLanguage={appLanguage}
+              targetLanguage={learningLanguage}
               isLesson={selectedGrammar.title_de === "Bestellen im Restaurant"}
             />
             <SimplePresent
-              nativeLanguage={nativeLanguage}
-              targetLanguage={targetLanguage}
+              nativeLanguage={appLanguage}
+              targetLanguage={learningLanguage}
               isLesson={selectedGrammar.title_de === "Simple Present"}
             />
             <SimplePast
-              nativeLanguage={nativeLanguage}
-              targetLanguage={targetLanguage}
+              nativeLanguage={appLanguage}
+              targetLanguage={learningLanguage}
               isLesson={selectedGrammar.title_de === "Simple Past"}
             />
             <PresentPerfect
-              nativeLanguage={nativeLanguage}
-              targetLanguage={targetLanguage}
+              nativeLanguage={appLanguage}
+              targetLanguage={learningLanguage}
               isLesson={selectedGrammar.title_de === "Present Perfect"}
             />
             <div className="d-flex flex-row align-items-center justify-content-between">
@@ -229,7 +241,7 @@ function Lessons() {
                   className="btn btn-primary m-1"
                   onClick={onClickGrammarCard}
                 >
-                  {lessonRepeatKey}
+                  {t("lessonRepeat")}
                 </button>
               )}
               {!isCompleted && (
@@ -237,7 +249,7 @@ function Lessons() {
                   className="btn btn-primary m-1 btn-lg"
                   onClick={onClickGrammarCard}
                 >
-                  {lessonStartKey}
+                  {t("lessonStart")}
                 </button>
               )}
 
@@ -245,7 +257,7 @@ function Lessons() {
                 className="btn btn-secondary"
                 onClick={onClickBackGrammarHub}
               >
-                {backKey}
+                {t("back")}
               </button>
             </div>
           </div>
@@ -258,7 +270,7 @@ function Lessons() {
               title={selectedGrammar[titleKey]}
               content={selectedGrammar.content}
               data={loadedData}
-              targetLanguage={targetLanguage}
+              targetLanguage={learningLanguage}
               passIsFinished={setOnIsFinished}
             />
           )}
@@ -267,7 +279,7 @@ function Lessons() {
               className="btn btn-secondary mt-5"
               onClick={onClickGrammarCard}
             >
-              {backToExplanationKey}
+              {t("backToExplanation")}
             </button>
           )}
         </div>

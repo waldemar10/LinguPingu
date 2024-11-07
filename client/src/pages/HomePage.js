@@ -3,11 +3,12 @@ import { LanguageContext } from "../context/LanguageContext";
 import { Link } from "react-router-dom";
 import NavigationBar from "../components/NavigationBar";
 import { useTranslation } from "react-i18next";
-import slogans from "../slogans.json";
+import { UserContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 
 import happyPingu from "../images/PinguIcons/happyPingu.png";
 import "../styles/Home.css";
+
 /**
  * @returns {JSX.Element} The Home page component.
  */
@@ -50,6 +51,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [loadingUser, setLoadingUser] = useState(false);
   const [randomSlogan, setRandomSlogan] = useState("");
+  const { id, setId } = useContext(UserContext);
   const {
     appLanguage,
     setAppLanguage,
@@ -95,15 +97,16 @@ const HomePage = () => {
       }
 
       const data = await response.json();
+      setId(data._id);
       sessionStorage.setItem("username", data.username);
       sessionStorage.setItem("biography", data.biography);
       sessionStorage.setItem("profilePicture64", data.profilePicture64);
       sessionStorage.setItem("profilePicture512", data.profilePicture512);
       sessionStorage.setItem("country", data.country);
       sessionStorage.setItem("verified", data.verified);
-      localStorage.setItem("learningLanguages", data.learningLanguages[0]);
-      localStorage.setItem("nativeLanguage", data.nativeLanguage[0]);
-      localStorage.setItem("appLanguage", data.nativeLanguage[0]);
+      localStorage.setItem(`${data._id}_learningLanguages`, data.learningLanguages[0]);
+      localStorage.setItem(`${data._id}_nativeLanguage`, data.nativeLanguage[0]);
+      localStorage.setItem(`${data._id}_appLanguage`, data.nativeLanguage[0]);
       setLearningLanguage(data.learningLanguages[0]);
       setNativeLanguage(data.nativeLanguage[0]);
       setAppLanguage(data.appLanguage);
@@ -117,17 +120,17 @@ const HomePage = () => {
   useEffect(() => {
     if (
       !sessionStorage.getItem("username") ||
-      !localStorage.getItem("learningLanguages") ||
-      !localStorage.getItem("appLanguage") ||
-      !localStorage.getItem("appLanguage") ||
       !sessionStorage.getItem("profilePicture64") ||
-      !sessionStorage.getItem("country")
+      !sessionStorage.getItem("country")||
+      !localStorage.getItem(`${id}_learningLanguages`)||
+      !localStorage.getItem(`${id}_nativeLanguage`) ||
+      !localStorage.getItem(`${id}_appLanguage`)
     ) {
       fetchUserData();
     } else {
-      setLearningLanguage(localStorage.getItem("learningLanguages"));
-      setNativeLanguage(localStorage.getItem("nativeLanguage"));
-      setAppLanguage(localStorage.getItem("appLanguage"));
+      setLearningLanguage(localStorage.getItem(`${id}_learningLanguages`));
+      setNativeLanguage(localStorage.getItem(`${id}_nativeLanguage`));
+      setAppLanguage(localStorage.getItem(`${id}_appLanguage`));
     }
     if (postTexts[appLanguage]) {
       const selectedSlogans = postTexts[appLanguage];
@@ -143,6 +146,7 @@ const HomePage = () => {
   }, [navigate]);
 
   useEffect(() => {
+    
     fetchProtectedData();
   }, [navigate]);
 

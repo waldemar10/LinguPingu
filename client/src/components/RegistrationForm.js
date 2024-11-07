@@ -48,7 +48,7 @@ function Registration() {
 
     if (step === 1) {
       const response = await fetch(
-        "http://localhost:5000/validateRegistration",
+        `${process.env.REACT_APP_SERVER_URI}/validateRegistration`,
         {
           method: "POST",
           headers: {
@@ -76,7 +76,8 @@ function Registration() {
       // * Validierung der Registrierungsdaten.
 
       // * Die Registrierungsdaten werden an den Server gesendet.
-      await fetch("http://localhost:5000/registration", {
+      await fetch(`${process.env.REACT_APP_SERVER_URI}/registration`,
+         {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -216,10 +217,10 @@ function Registration() {
                 (option) => option.value === nativeLanguages
               )}
               onChange={(option) =>
-                setNativeLanguages(option.map((option) => option.value))
+                setNativeLanguages(option.value)
               }
               options={languageOptions}
-              isMulti
+             /*  isMulti */
             />
           </div>
           <div className="d-flex flex-column m-1">
@@ -231,10 +232,10 @@ function Registration() {
                 (option) => option.value === learningLanguages
               )}
               onChange={(option) =>
-                setLearningLanguages(option.map((option) => option.value))
+                setLearningLanguages(option.value)
               }
               options={languageOptions}
-              isMulti
+             /*  isMulti */
             />
           </div>
         </div>

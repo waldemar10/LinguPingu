@@ -1,10 +1,37 @@
+import React,{useEffect} from "react";
 import { Link } from "react-router-dom";
 import NavigationBar from "../components/NavigationBar";
 
 import excitedPingu from "../images/PinguIcons/excitedPingu.png";
 import "../styles/Home.css";
-
+import { useNavigate } from "react-router-dom";
 const GamesPage = () => {
+  const navigate = useNavigate();
+  const fetchProtectedData = async () => {
+
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_SERVER_URI}/protected`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      navigate("/landing");
+    } 
+  };
+  useEffect(() => {
+    fetchProtectedData();
+  }, []);
   return (
     <>
       <div className="d-flex flex-column justify-content-center align-items-center g-0">

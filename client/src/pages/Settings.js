@@ -1,12 +1,9 @@
 import NavigationBar from "../components/NavigationBar";
 import { useContext, useState,useEffect } from "react";
-import { UserContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "../context/LanguageContext";
 
 import countries from "i18n-iso-countries";
 import { useTranslation } from "react-i18next";
-import langs from "langs";
 import Select from "react-select";
 
 import "../styles/ProfilePage.css";
@@ -17,12 +14,6 @@ countries.registerLocale(require("i18n-iso-countries/langs/en.json"));
 const countryOptions = Object.entries(
   countries.getNames("en", { select: "official" })
 ).map(([code, name]) => ({ value: code, label: name }));
-
-/*
-const languageOptions = langs
-  .all()
-  .map(({ name, 1: code }) => ({ value: code, label: name }));
-*/
 
 const languageOptions = [
   { value: "de", label: "Deutsch" },
@@ -44,6 +35,31 @@ function Settings() {
   const [errorMessage, setErrorMessage] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const navigate = useNavigate();
+  const fetchProtectedData = async () => {
+
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_SERVER_URI}/protected`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      navigate("/landing");
+    } 
+  };
+  useEffect(() => {
+    fetchProtectedData();
+  }, []);
   const fetchUserData = async () => {
     setLoadingUser(true);
     try {
@@ -98,7 +114,15 @@ function Settings() {
   }, [navigate]);
 
   if (loadingUser) {
-    return <div>Loading...</div>;
+    return (
+      <div className=" vh-100 d-flex flex-column align-items-center justify-content-center">
+        <div
+          className="spinner-border text-primary "
+          style={{ width: "6rem", height: "6rem" }}
+        ></div>
+        {loadingUser && <p className="text-light">Loading User...</p>}
+      </div>
+    );
   }
   let userCountry = countryOptions;
  
@@ -127,6 +151,10 @@ function Settings() {
 
       if (response.status === 200) {
         console.log("Update successful!");
+        sessionStorage.setItem("username", username);
+        sessionStorage.setItem("profilePicture64", user.profilePicture64);
+        sessionStorage.setItem("learningLanguages", learningLanguages);
+        sessionStorage.setItem("nativeLanguage", nativeLanguage);
         navigate("/profile");
       } else {
         const errorMessage = await response.json();
@@ -223,10 +251,9 @@ function Settings() {
                   (option) => option.value === nativeLanguage
                 )}
                 onChange={(option) =>
-                  setNativeLanguage(option.map((option) => option.value))
+                  setNativeLanguage(option.value)
                 }
                 options={languageOptions}
-                isMulti
               />
             </div>
 
@@ -239,10 +266,9 @@ function Settings() {
                   (option) => option.value === learningLanguages
                 )}
                 onChange={(option) =>
-                  setLearningLanguages(option.map((option) => option.value))
+                  setLearningLanguages(option.value)
                 }
                 options={languageOptions}
-                isMulti
               />
             </div>
 

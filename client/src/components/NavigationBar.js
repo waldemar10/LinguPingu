@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Navbar, Dropdown, Image } from "react-bootstrap";
 import { UserContext } from "../context/UserContext";
 import { useTranslation } from "react-i18next";
+import {LanguageContext} from "../context/LanguageContext";
 import Flag from "react-world-flags";
 
 /**
@@ -11,8 +12,8 @@ import Flag from "react-world-flags";
  */
 const NavigationBar = () => {
   // * The UserContext is used to access the user data.
-  const { logout} = useContext(UserContext);
-
+  const { logout,id,setId} = useContext(UserContext);
+  const {setAppLanguage,setNativeLanguage, setLearningLanguage,appLanguage,nativeLanguage,learningLanguage} = useContext(LanguageContext);
   const [username, setUsername] = useState(null);
   const [profilePicture, setProfilePicture] = useState(null);
   // * The state of the Navbar is used to determine whether the Navbar is expanded or not.
@@ -21,7 +22,6 @@ const NavigationBar = () => {
   const navbarNavRef = useRef(null);
 
   const [tp, i18next] = useTranslation("mainPages");
-  const [isGerman, setIsGerman] = useState(i18next.language === "de");
 
   const fetchUserData = async () => {
     try {
@@ -37,6 +37,9 @@ const NavigationBar = () => {
       const data = await response.json();
       setUsername(data.username);
       setProfilePicture(data.profilePicture64);
+      setLearningLanguage(data.learningLanguages);
+      setNativeLanguage(data.nativeLanguage);
+      setAppLanguage(data.appLanguage);
     } catch (error) {
       console.error("Fetch error:", error);
     } 
@@ -49,15 +52,35 @@ const NavigationBar = () => {
     if(sessionStorage.getItem("profilePicture64") !== null){
       setProfilePicture(sessionStorage.getItem("profilePicture64"));
     }
-    if(username == null || profilePicture == null){
+    if(localStorage.getItem(`${id}_learningLanguages`) !== null){
+      setLearningLanguage(localStorage.getItem(`${id}_learningLanguages`));
+    }
+    if(localStorage.getItem(`${id}_nativeLanguage`) !== null){
+      setNativeLanguage(localStorage.getItem(`${id}_nativeLanguage`));
+    }
+    if(localStorage.getItem(`${id}_appLanguage`) !== null){
+      setAppLanguage(localStorage.getItem(`${id}_appLanguage`));
+    }
+    if(username == null || profilePicture == null || learningLanguage == null || nativeLanguage == null|| appLanguage == null){
     fetchUserData();
     }
-  }, [username == null]);
+  }, [username, profilePicture, learningLanguage, nativeLanguage,appLanguage]);
 
   const toggleLanguage = () => {
-    i18next.changeLanguage(isGerman ? "en" : "de");
-    localStorage.setItem("appLanguage", i18next.language);
-    setIsGerman(!isGerman);
+    if(i18next.language === nativeLanguage){
+      i18next.changeLanguage(learningLanguage);
+    }else{
+      i18next.changeLanguage(nativeLanguage);
+    }
+
+    if(i18next.language === "gb"){
+      i18next.changeLanguage("en");
+      setAppLanguage("en");
+      localStorage.setItem(`${id}_appLanguage`, "en");
+    }else{
+      setAppLanguage(i18next.language);
+      localStorage.setItem(`${id}_appLanguage`, i18next.language);
+    }
   };
 
   // * HTML code of the NavigationBar component.
@@ -114,7 +137,7 @@ const NavigationBar = () => {
             style={{ cursor: "pointer" }}
           >
             <Flag
-              code={isGerman ? "de" : "gb"}
+              code={i18next.language === "en" ? "gb" : i18next.language}
               height="24"
               width="48"
               key={`$+"learning"`}
