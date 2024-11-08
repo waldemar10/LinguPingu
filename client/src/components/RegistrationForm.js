@@ -42,10 +42,10 @@ function Registration() {
   const [nativeLanguages, setNativeLanguages] = useState([]);
   const [learningLanguages, setLearningLanguages] = useState([]);
   const [errors, setErrors] = useState({});
-
+  const [isLoading, setIsLoading] = useState(false);
   const handleNext = async (event) => {
     event.preventDefault();
-
+    setIsLoading(true);
     if (step === 1) {
       const response = await fetch(
         `${process.env.REACT_APP_SERVER_URI}/validateRegistration`,
@@ -70,6 +70,7 @@ function Registration() {
       if (data.errors) {
         setErrors(data.errors);
       } else {
+        setIsLoading(false);
         setStep(2);
       }
     } else if (step === 2) {
@@ -135,6 +136,18 @@ function Registration() {
     nativeLanguages.length > 0 &&
     learningLanguages.length > 0;
 
+    if (isLoading) {
+      return (
+        <div className=" vh-100 d-flex flex-column align-items-center justify-content-center">
+          <div
+            className="spinner-border text-primary "
+            style={{ width: "6rem", height: "6rem" }}
+          ></div>
+          <p className="text-light">Loading Data...</p>
+          <p>Es kann bis zur einer Minute dauern.</p>
+        </div>
+      );
+    }
   // * HTML-Formular zur Registrierung.
   return (
     <div

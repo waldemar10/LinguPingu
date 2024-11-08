@@ -16,6 +16,7 @@ function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
+  const [isLoading,setIsLoading] = useState(false);
 
   // * Die folgenden Funktionen aktualisieren die States, wenn sich die Eingaben des Nutzers ändern.
   const handleUsernameChange = (event) => {
@@ -30,7 +31,7 @@ function Login() {
     event.preventDefault();
 
     console.log("Login-Formular wurde abgeschickt!");
-
+    setIsLoading(true);
     setErrors({});
     // * Die Login-Daten werden an den Server gesendet.
     const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/login`, {
@@ -51,6 +52,7 @@ function Login() {
       console.log(data.errors);
       setErrors(data.errors);
     } else {
+      setIsLoading(false);
       navigate("/home");
     }
   };
@@ -58,7 +60,18 @@ function Login() {
   const isFormComplete = () => {
     return username.length > 0 && password.length > 0;
   };
-
+  if (isLoading) {
+    return (
+      <div className=" vh-100 d-flex flex-column align-items-center justify-content-center">
+        <div
+          className="spinner-border text-primary "
+          style={{ width: "6rem", height: "6rem" }}
+        ></div>
+        <p className="text-light">Loading Data...</p>
+        <p>Es kann bis zur einer Minute dauern.</p>
+      </div>
+    );
+  }
   // * HTML-Code des Login-Formulars.
   return (
     <form className="bg-light p-3 rounded" onSubmit={handleSubmit}>
