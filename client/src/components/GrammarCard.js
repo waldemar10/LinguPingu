@@ -5,6 +5,7 @@ import happyPingu from "../images/PinguIcons/happyPingu.png";
 import sadPingu from "../images/PinguIcons/sadPingu.png";
 import "../styles/Grammar.css";
 import { useTranslation } from "react-i18next";
+
 const GERMAN = "de";
 const ENGLISH = "en";
 // Shuffle array function
@@ -64,6 +65,7 @@ function GrammarCard({ title, content, data, passIsFinished }) {
   const [isRight, setIsRight] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
   const { id, setId } = useContext(UserContext);
   const navigate = useNavigate();
 
@@ -173,25 +175,12 @@ function GrammarCard({ title, content, data, passIsFinished }) {
         } catch (error) {
           setIsFinished(true);
           passIsFinished(true);
-          let completedLessons =
-            JSON.parse(localStorage.getItem(`${id}_completedLessons`)) || [];
-
-          if (
-            !completedLessons.includes(
-              data[lessonIndex].lessons[grammarIndex].title_en
-            )
-          ) {
-            completedLessons.push(
-              data[lessonIndex].lessons[grammarIndex].title_en
-            );
-            localStorage.setItem(
-              `${id}_completedLessons`,
-              JSON.stringify(completedLessons)
-            );
-          }
           updateLessonCompletion(
             data[lessonIndex].lessons[grammarIndex].title_en
           );
+
+          
+          
         }
       }, 1500);
     } else {
@@ -220,7 +209,7 @@ function GrammarCard({ title, content, data, passIsFinished }) {
   const updateLessonCompletion = async (title_en) => {
 
     try {
-      await fetch(
+      const response = await fetch(
         `${process.env.REACT_APP_SERVER_URI}/updateLessonCompletion`,
         {
           method: "PUT",
@@ -233,6 +222,28 @@ function GrammarCard({ title, content, data, passIsFinished }) {
           credentials: "include",
         }
       );
+      if(response.status === 403){
+        console.error("Guest status:", Response.status);
+      }else if(response.ok){
+        let completedLessons =
+            JSON.parse(localStorage.getItem(`${id}_completedLessons`)) || [];
+
+          if (
+            !completedLessons.includes(
+              data[lessonIndex].lessons[grammarIndex].title_en
+            )
+          ) {
+            completedLessons.push(
+              data[lessonIndex].lessons[grammarIndex].title_en
+            );
+            localStorage.setItem(
+              `${id}_completedLessons`,
+              JSON.stringify(completedLessons)
+            );
+          }
+      }else{
+        console.error("Error when setting completed to true:", response.status);
+      }
     } catch (error) {
       console.error("Error when setting completed to true:", error);
     }

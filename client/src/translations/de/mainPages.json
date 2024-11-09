@@ -5,7 +5,8 @@
     },
     "home": {
         "registerButton":"Konto erstellen",
-        "loginButton": "Ich habe schon ein Konto"
+        "loginButton": "Ich habe schon ein Konto",
+        "guestButton": "Als Gast fortfahren"
     },
     "homePage":{
         "grammarHeadline": "Grammatik",

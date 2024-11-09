@@ -6,7 +6,7 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const connectDB = require("./connectdb");
 const User = require("./model/User");
-const { sendMail } = require("./controllers/MailController");
+/* const { sendMail } = require("./controllers/MailController"); */
 const crypto = require("crypto");
 const helmet = require('helmet');
 const jwt = require('jsonwebtoken');
@@ -64,11 +64,13 @@ const authenticateToken = (req, res, next) => {
   const token = req.cookies.token;
 
   if (!token) {
+    console.log("No token found");
     return res.sendStatus(401);
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
+      console.log("Token verification failed:", err);
       return res.sendStatus(403);
     }
     req.user = user;
@@ -103,9 +105,9 @@ app.post("/refreshToken", authenticateToken, (req, res) => {
   const userId = req.user.userId;
   const newToken = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
   res.cookie('token', newToken, {
-    httpOnly: true,
+    httpOnly: process.env.NODE_ENV === 'production',
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    sameSite:  process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 3600000, // 1 Stunde
   });
   res.json({ success: true, message: "Token refreshed" });
@@ -171,9 +173,9 @@ app.post("/login", async (req, res) => {
 
 
           res.cookie('token', token, {
-            httpOnly: true,
+            httpOnly: process.env.NODE_ENV === 'production',
             secure: process.env.NODE_ENV === 'production', 
-            sameSite: 'none', 
+            sameSite:  process.env.NODE_ENV === 'production' ? 'none' : 'lax', 
             maxAge: 3600000, 
           });
 
@@ -189,11 +191,38 @@ app.post("/login", async (req, res) => {
     
   });
 });
+app.post("/guestLogin", async (req, res) => {
+  console.info("Guest login request received.");
+try{
+  const guestUser = await User.findOne({ username: "Gast" });
+
+  if (!guestUser) {
+    return res.status(404).json({ success: false, message: "Guest user not found" });
+  }
+  
+  const userObject = guestUser.toObject();
+  const token = jwt.sign({ userId: guestUser._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  delete userObject.password;
+  
+  res.cookie('token', token, {
+    httpOnly: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite:  process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 3600000,
+  });
+  console.info("Guest login successful.");
+  return res.status(200).json({ success: true, message: "Guest login successful" });
+} catch (error) {
+  console.error("Error during guest login:", error);
+  return res.status(500).json({ success: false, message: error.message });
+}
+});
+
 app.post("/logout", (req, res) => {
   res.clearCookie("token", {
-    httpOnly: false,
+    httpOnly: process.env.NODE_ENV === 'production',
     secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
+    sameSite:  process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   });
   res.status(200).json({ message: "Logged out successfully" });
 });
@@ -404,6 +433,10 @@ app.post("/updateUser", authenticateToken, async (req, res) => {
   try {
     const { username, biography, email, country, nativeLanguage, learningLanguages } = req.body;
     const userId = req.user.userId; 
+    const user = await User.findById(userId);
+    if (user && user.guest && user.guest === 'true') {
+      return res.status(403).send('Settings changes are not allowed for guest users.');
+    }
 
     if (username) {
       const newUsernameExist = await User.findOne({ username });

@@ -52,7 +52,7 @@ function GrammarHub() {
   };
   
   useEffect(()=>{
-    if(!localStorage.getItem(`${id}_appLanguage`)){
+    if(!localStorage.getItem(`${id}_appLanguage`|| id === null || id === -1)){
       fetchUserData();
     }else{
       setAppLanguage(localStorage.getItem(`${id}_appLanguage`));

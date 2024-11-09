@@ -31,7 +31,9 @@ async function updateLessonCompletion(req, res) {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-
+    if (user.guest && user.guest === 'true') {
+      return res.status(403).send('Saving not allowed for guest users.');
+    }
     if (!user.completedLessons) {
       console.warn(`User ${userId} has no completedLessons array`);
       return res.status(400).json({ error: "completedLessons not initialized" });

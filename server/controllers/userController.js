@@ -92,11 +92,10 @@ const updateBiography = async (req, res) => {
     try {
       const { username, biography } = req.body;
   
-      console.log("Benutzername:", username);
-      console.log("Biografie:", biography);
-  
       const user = await User.findOne({ username });
-  
+      if (user && user.guest && user.guest === 'true') {
+        return res.status(403).send('Settings changes are not allowed for guest users.');
+      }
       if (!user) {
         console.log("Benutzer nicht gefunden");
         return res

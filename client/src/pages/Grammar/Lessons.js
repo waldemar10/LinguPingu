@@ -94,25 +94,7 @@ function Lessons() {
     getCompletedLessons();
     setSelectedGrammar(loadedData[lessonIndex].lessons[grammarIndex]);
   }, []);
- /*  useEffect(() => {
-    if (loadedData) {
 
-      console.log(lessonIndex)
-
-      if (
-        loadedData[lessonIndex].level &&
-        loadedData[lessonIndex].lessons[grammarIndex].title_de
-      ) {
-        const selectedGrammar = loadedData[lessonIndex].lessons[grammarIndex];
-        setSelectedGrammar(selectedGrammar);
-        checkCompletion(
-          loadedData[lessonIndex].lessons[grammarIndex].title_en
-        ).then((completed) => {
-          setIsCompleted(completed);
-        });
-      }
-    }
-  }, [lessonIndex, grammarIndex, loadedData]); */
   const fetchUserData = async () => {
     setLoadingUser(true);
     try {

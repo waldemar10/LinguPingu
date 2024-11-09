@@ -98,6 +98,11 @@ const UserSchema = new Schema({
     default:[],
     required: false,
   },  
+  guest: {
+    type: String,
+    default: "false",
+    required: false,
+  },
 });
 
 /**

@@ -5,7 +5,8 @@
     },
     "home": {
         "registerButton":"Create Account",
-        "loginButton": "Sign In"
+        "loginButton": "Sign In",
+        "guestButton": "Continue as Guest"
     },
     "homePage":{
         "grammarHeadline": "Grammar",

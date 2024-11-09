@@ -40,6 +40,7 @@ const NavigationBar = () => {
       setLearningLanguage(data.learningLanguages);
       setNativeLanguage(data.nativeLanguage);
       setAppLanguage(data.appLanguage);
+      setId(data._id);
     } catch (error) {
       console.error("Fetch error:", error);
     } 
@@ -61,7 +62,8 @@ const NavigationBar = () => {
     if(localStorage.getItem(`${id}_appLanguage`) !== null){
       setAppLanguage(localStorage.getItem(`${id}_appLanguage`));
     }
-    if(username == null || profilePicture == null || learningLanguage == null || nativeLanguage == null|| appLanguage == null){
+    if(username == null || profilePicture == null || learningLanguage == null 
+      || nativeLanguage == null|| appLanguage == null|| id == null){
     fetchUserData();
     }
   }, [username, profilePicture, learningLanguage, nativeLanguage,appLanguage]);
