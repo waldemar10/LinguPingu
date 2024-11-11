@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { LanguageContext } from "../../context/LanguageContext";
 import { useData, useSelectedTab } from "../../context/DataContext";
 import NavigationBar from "../../components/NavigationBar";
-
+import LoadingSpinner from "../../components/LoadingSpinner";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -248,16 +248,7 @@ const getCompletedLessons = async () => {
   
 
   if (loadedData === null || loadedData === undefined || loadingUser) {
-    return (
-      <div className=" vh-100 d-flex align-items-center justify-content-center">
-        <div
-          className="spinner-border text-primary "
-          style={{ width: "6rem", height: "6rem" }}
-        ></div>
-        {loadingUser && <p className="text-light">Loading User...</p>}
-        {loadedData === undefined && <p className="text-light">Loading Data...</p>}
-      </div>
-    );
+    return <LoadingSpinner />
   }
 
   return (

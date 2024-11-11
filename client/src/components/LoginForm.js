@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import LoadingSpinner from "./LoadingSpinner";
 /**
  *
  * @returns {JSX.Element} - Das Login-Formular.
@@ -61,19 +62,12 @@ function Login() {
     return username.length > 0 && password.length > 0;
   };
   if (isLoading) {
-    return (
-      <div className=" vh-100 d-flex flex-column align-items-center justify-content-center">
-        <div
-          className="spinner-border text-primary "
-          style={{ width: "6rem", height: "6rem" }}
-        ></div>
-        <p className="text-light">Loading Data...</p>
-        <p>Es kann bis zur einer Minute dauern.</p>
-      </div>
-    );
+    return <LoadingSpinner />
   }
   // * HTML-Code des Login-Formulars.
   return (
+    <>
+    
     <form className="bg-light p-3 rounded" onSubmit={handleSubmit}>
       <div className="form-group">
         <label htmlFor="username" className="text-dark">
@@ -108,6 +102,7 @@ function Login() {
         Login
       </button>
     </form>
+    </>
   );
 }
 

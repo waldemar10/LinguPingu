@@ -11,7 +11,7 @@ import { LanguageContext } from "../../context/LanguageContext";
 import { useData, useSelectedTab } from "../../context/DataContext";
 import { useTranslation } from "react-i18next";
 import { UserContext } from "../../context/UserContext";
-
+import LoadingSpinner from "../../components/LoadingSpinner";
 import NavigationBar from "../../components/NavigationBar";
 
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
@@ -160,15 +160,7 @@ function Lessons() {
   }, [loadedData]);
 
   if (loadingUser) {
-    return (
-      <div className=" vh-100 d-flex align-items-center justify-content-center">
-        <div
-          className="spinner-border text-primary "
-          style={{ width: "6rem", height: "6rem" }}
-        ></div>
-        {loadingUser && <p className="mt-3">Loading user data...</p>}
-      </div>
-    );
+    return <LoadingSpinner />
   }
 
   return (

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import countries from "i18n-iso-countries";
 import langs from "langs";
 import Select from "react-select";
-
+import LoadingSpinner from "./LoadingSpinner";
 import "../styles/ProfilePage.css";
 
 countries.registerLocale(require("i18n-iso-countries/langs/de.json"));
@@ -137,16 +137,7 @@ function Registration() {
     learningLanguages.length > 0;
 
     if (isLoading) {
-      return (
-        <div className=" vh-100 d-flex flex-column align-items-center justify-content-center">
-          <div
-            className="spinner-border text-primary "
-            style={{ width: "6rem", height: "6rem" }}
-          ></div>
-          <p className="text-light">Loading Data...</p>
-          <p>Es kann bis zur einer Minute dauern.</p>
-        </div>
-      );
+      return <LoadingSpinner />
     }
   // * HTML-Formular zur Registrierung.
   return (

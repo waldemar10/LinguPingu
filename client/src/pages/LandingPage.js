@@ -6,12 +6,14 @@ import angryPingu from "../images/PinguIcons/angryPingu.png";
 import happyPingu from "../images/PinguIcons/happyPingu.png";
 import happyWalkPingu from "../images/PinguIcons/happyWalkPingu.png";
 import excitedPingu from "../images/PinguIcons/excitedPingu.png";
-
+import LoadingSpinner from "../components/LoadingSpinner";
 const LandingPage = () => {
   const [t] = useTranslation("mainPages");
+  const [isLoadingGuestLogin, setIsLoadingGuestLogin] = React.useState(false);
   const navigate = useNavigate();
   const guestLogin = async () => {
     try{
+      setIsLoadingGuestLogin(true);
       const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/guestLogin`, {
         method: "POST",
         headers: {
@@ -27,6 +29,7 @@ const LandingPage = () => {
       const data = await response.json();
       console.log(data);
       if(data){
+        setIsLoadingGuestLogin(false);
         console.log("Guest login successful");
         navigate("/home");
       }
@@ -34,6 +37,9 @@ const LandingPage = () => {
       console.error("Fetch error:", error);
     }
     
+  }
+  if(isLoadingGuestLogin){
+    return <LoadingSpinner/>
   }
   return (
     <>
