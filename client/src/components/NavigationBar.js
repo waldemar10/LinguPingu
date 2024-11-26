@@ -5,15 +5,17 @@ import { UserContext } from "../context/UserContext";
 import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../context/LanguageContext";
 import Flag from "react-world-flags";
+import useUserData from "../hooks/useUserData";
 
-import UserService from "../services/UserService";
-/**
- * * The Navbar component is displayed at the top of every page (when the user is logged in).
- * @returns {JSX.Element} The Navbar component.
- */
 const NavigationBar = () => {
   // * The UserContext is used to access the user data.
-  const { logout,username,setUsername,profilePicture64,setProfilePicture64 } = useContext(UserContext);
+  const {
+    logout,
+    username,
+    setUsername,
+    profilePicture64,
+    setProfilePicture64,
+  } = useContext(UserContext);
   const {
     setAppLanguage,
     setNativeLanguage,
@@ -28,73 +30,40 @@ const NavigationBar = () => {
   const navbarNavRef = useRef(null);
 
   const [tp, i18next] = useTranslation("mainPages");
-
-  const fetchUserData = async () => {
-    try {
-      UserService.getUser()
-        .then((res) => {
-          setUsername(res.data.username);
-          setProfilePicture64(res.data.profilePicture64);
-          setLearningLanguage(res.data.learningLanguages[0] === "gb" ? "en" : res.data.learningLanguages[0]);
-          setNativeLanguage(res.data.nativeLanguage[0]);
-          if (
-            localStorage.getItem(`${res.data.username}_appLanguage`) !== null
-          ) {
-            setAppLanguage(
-              localStorage.getItem(`${res.data.username}_appLanguage`)
-            );
-          } else {
-            setAppLanguage(res.data.appLanguage);
-            localStorage.setItem(
-              `${res.data.username}_appLanguage`,
-              res.data.appLanguage
-            );
-          }
-        })
-        .catch((error) => {
-          console.error("Fetch error:", error);
-        });
-    } catch (error) {
-      console.error("Fetch error:", error);
-    }
-  };
-
-  useEffect(
-    () => {
-      const requiredKeys = ["username", "learningLanguages", "nativeLanguage"];
-      const isSessionStorageEmpty = requiredKeys.some(
-        (key) => !sessionStorage.getItem(key)
-      );
-  
-      if (isSessionStorageEmpty || localStorage.getItem(`${username}_appLanguage`) === null) {
-        fetchUserData();
-      } else {
-        setUsername(sessionStorage.getItem("username"));
-        setProfilePicture64(sessionStorage.getItem("profilePicture64"));
-        setLearningLanguage(sessionStorage.getItem("learningLanguages"));
-        setNativeLanguage(sessionStorage.getItem("nativeLanguage"));
-        setAppLanguage(localStorage.getItem(`${username}_appLanguage`));
-      }
-    },
-    []
+  const requiredKeys = ["username", "learningLanguages", "nativeLanguage"];
+  const isSessionStorageEmpty = requiredKeys.some(
+    (key) => !sessionStorage.getItem(key)
   );
 
-  const toggleLanguage = () => {
-    if (i18next.language === nativeLanguage) {
+  const isLocalStorageEmpty = !localStorage.getItem("LinguPingu_appLanguage");
+  useUserData(isSessionStorageEmpty || isLocalStorageEmpty);
+  const toggleLanguage = (appLanguage) => {
+    if (!username) return;
+    if (!appLanguage) return;
+
+    if (appLanguage === nativeLanguage) {
       i18next.changeLanguage(learningLanguage);
     } else {
       i18next.changeLanguage(nativeLanguage);
     }
-
-    if (i18next.language === "gb") {
-      i18next.changeLanguage("en");
-      setAppLanguage("en");
-      localStorage.setItem(`${username}_appLanguage`, "en");
-    } else {
-      setAppLanguage(i18next.language);
-      localStorage.setItem(`${username}_appLanguage`, i18next.language);
-    }
+    setAppLanguage(i18next.language);
+    localStorage.setItem("LinguPingu_appLanguage", i18next.language);
   };
+  
+  useEffect(() => {
+    if (!isSessionStorageEmpty) {
+      setUsername(sessionStorage.getItem("username"));
+      setProfilePicture64(sessionStorage.getItem("profilePicture64"));
+      setLearningLanguage(sessionStorage.getItem("learningLanguages"));
+      setNativeLanguage(sessionStorage.getItem("nativeLanguage"));
+      setAppLanguage(localStorage.getItem("LinguPingu_appLanguage"));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!appLanguage) return;
+    i18next.changeLanguage(appLanguage);
+  }, [appLanguage]);
 
   // * HTML code of the NavigationBar component.
   return (
@@ -143,13 +112,12 @@ const NavigationBar = () => {
           }`}>
           <div
             className="d-flex align-items-center me-3"
-            onClick={() => toggleLanguage()}
+            onClick={() => toggleLanguage(appLanguage)}
             style={{ cursor: "pointer" }}>
             <Flag
-              code={i18next.language === "en" ? "gb" : i18next.language}
+              code={appLanguage === "en" ? "gb" : appLanguage}
               height="24"
               width="48"
-              key={`$+"learning"`}
             />
           </div>
           <Navbar.Text className="ms-2 me-3">
