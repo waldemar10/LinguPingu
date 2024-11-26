@@ -1,9 +1,7 @@
 import React from 'react';
 
-const PresentPerfect = ({ nativeLanguage, targetLanguage, isLesson }) => {
-    if (!isLesson) {
-        return null;
-    }
+const PresentPerfect = ({ nativeLanguage, targetLanguage}) => {
+
     const getLesson = () => {
 
         if (nativeLanguage === 'de') {

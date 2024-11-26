@@ -6,6 +6,7 @@ import "./App.css";
 
 // * The App component represents the main component of the application.
 function App() {
+
   useRefreshToken();
   return (
     <div>

@@ -38,7 +38,6 @@ const MemoryCard = (props) => {
     </div>
   );
 
-  // console.log(isFlipped);
   return (
     <div className="card-container">
       {!isCollectionFinished ? (

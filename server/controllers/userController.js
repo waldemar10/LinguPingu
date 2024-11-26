@@ -43,7 +43,7 @@ const createNewUser = async (req, res) => {
 }
 
 
-const updateUser = async (req, res) => {
+/* const updateUser = async (req, res) => {
     if(!req?.nody?.id){
         return res.status(400).json({'message': 'keine Id gefunden'});
     }
@@ -54,7 +54,7 @@ const updateUser = async (req, res) => {
     if(req.body?.firstname)user.firstname = req.body.firstname;
     if(req.body?.lastname)user.lastname = req.body.lastname;
     if(req.body?.email)user.email = req.body.email;
-    /* if(req.body?.password)user.password = req.body.password; */
+    //if(req.body?.password)user.password = req.body.password;
     if(req.body?.biography)user.biography = req.body.biography;
     if(req.body?.country)user.country = req.body.country;
     if(req.body?.nativeLanguage)user.nativeLanguage = req.body.nativeLanguage;
@@ -63,7 +63,7 @@ const updateUser = async (req, res) => {
     const result = await user.save();
     res.json(result);
 }
-
+ */
 
 const deleteUser = async (req, res) => {
     if(!req?.body?.id) return res.status(400).json({'message': 'keine Id gefunden'});
@@ -84,13 +84,50 @@ const deleteUser = async (req, res) => {
     }
     res.json(user);
 } */
-
+    const updateUser = async (req, res) => {
+      try {
+        const { username, oldusername, email,oldemail,biography, country, nativeLanguage, learningLanguages } = req.body.data;
+        
+        const userId = req.user.userId; 
+        const user = await User.findById(userId);
+    
+        if (user && user.guest && user.guest === 'true') {
+          return res.status(403).send('Settings changes are not allowed for guest users.');
+        }
+    
+        if (username !== oldusername) {
+          const newUsernameExist = await User.findOne({ username });
+          if (newUsernameExist) {
+            console.log("Username already taken");
+            return res.status(400).json({ success: false, message: "Username already taken" });
+          }
+        }
+    
+        if(email !== oldemail){
+        const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
+        if (!email || !emailRegex.test(email)) {
+          return res.status(400).json({ success: false, message: "Invalid e-mail address" });
+        }
+      }
+    
+        const updatedUser = await User.findByIdAndUpdate(
+          userId,
+          { username, email, biography, country, nativeLanguage, learningLanguages },
+          { new: true }
+        );
+    
+        return res.status(200).json({ success: true, message: "User updated successfully", user: updatedUser });
+      } catch (error) {
+        console.error("Error during user update:", error);
+        return res.status(500).json({ success: false, message: error.message });
+      }
+    }
 const updateBiography = async (req, res) => {
 
     console.log("Biografie aktualisieren");
   
     try {
-      const { username, biography } = req.body;
+      const { username, biography } = req.body.data;
   
       const user = await User.findOne({ username });
       if (user && user.guest && user.guest === 'true') {

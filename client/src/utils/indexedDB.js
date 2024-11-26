@@ -1,3 +1,29 @@
+export const initializeDatabase = async (key, data) => {
+  try {
+    const db = await openDatabase();
+
+    const existingData = await getObjectFromStore(db, "LinguPinguStore", key);
+    if (existingData) {
+      await updateObjectInStore(db, "LinguPinguStore", existingData);
+    } else {
+      await addObjectToStore(db, "LinguPinguStore", { id: key, data });
+    }
+  } catch (error) {
+    console.error("Error initializing database:", error);
+  }
+};
+
+export const fetchDatabaseData = async (key) => {
+  try {
+    const db = await openDatabase();
+    const data = await getObjectFromStore(db, "LinguPinguStore", key);
+    return data ? data.data : null;
+  } catch (error) {
+    console.error("Error fetching data from database:", error);
+  }
+};
+
+
 // Open indexedDB
 export const openDatabase = () => {
   return new Promise((resolve, reject) => {
@@ -6,9 +32,9 @@ export const openDatabase = () => {
     const request = window.indexedDB.open(dbName, 1);
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
-      if(!db.objectStoreNames.contains('myObjectStore'))
+      if(!db.objectStoreNames.contains('LinguPinguStore'))
       {
-      db.createObjectStore('myObjectStore', { keyPath: 'id' });
+      db.createObjectStore('LinguPinguStore', { keyPath: 'id' });
       }
     };
 

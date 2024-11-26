@@ -1,9 +1,7 @@
 import React from 'react';
 
-const Introduction = ({ nativeLanguage, targetLanguage, isLesson }) => {
-    if (!isLesson) {
-        return null;
-    }
+const Introduction = ({ nativeLanguage, targetLanguage }) => {
+
     const getLesson = () => {
 
         if (nativeLanguage === 'de') {

@@ -1,9 +1,7 @@
 import React from 'react';
 
-const SimplePresent = ({ nativeLanguage, targetLanguage, isLesson }) => {
-    if (!isLesson) {
-        return null;
-    }
+const SimplePresent = ({ nativeLanguage, targetLanguage }) => {
+
     const getLesson = () => {
 
         if (nativeLanguage === 'de') {

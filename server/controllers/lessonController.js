@@ -24,7 +24,10 @@ async function getLessonProgress(req, res) {
 
 async function updateLessonCompletion(req, res) {
   try {
-    const { title_en } = req.body;
+    const { title_en } = req.body.data;
+    if(!title_en){
+      return res.status(400).json({ error: "Missing title_en" });
+    }
     const userId = req.user.userId;
     const user = await User.findOne({ _id: userId });
 
@@ -41,8 +44,8 @@ async function updateLessonCompletion(req, res) {
 
     if (!user.completedLessons.includes(title_en)) {
       user.completedLessons.push(title_en);
-      const updatedUser = await user.save();
-      res.json({ message: "Lesson marked as completed", updatedUser });
+      await user.save();
+      res.json({ message: "Lesson marked as completed"});
     } else {
       res.status(409).json({ error: "Lesson already completed" });
     }

@@ -1,9 +1,7 @@
 import React from 'react';
 
-const GreetingsContent = ({ nativeLanguage, targetLanguage, isLesson }) => {
-    if (!isLesson) {
-        return null;
-    }
+const GreetingsContent = ({ nativeLanguage, targetLanguage }) => {
+
     const getLesson = () => {
         
         if (nativeLanguage === 'de') {

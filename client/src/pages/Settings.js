@@ -1,5 +1,5 @@
 import NavigationBar from "../components/NavigationBar";
-import { useContext, useState,useEffect } from "react";
+import { useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import countries from "i18n-iso-countries";
@@ -7,6 +7,8 @@ import { useTranslation } from "react-i18next";
 import Select from "react-select";
 
 import "../styles/ProfilePage.css";
+import UserService from "../services/UserService";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 countries.registerLocale(require("i18n-iso-countries/langs/de.json"));
 countries.registerLocale(require("i18n-iso-countries/langs/en.json"));
@@ -22,152 +24,118 @@ const languageOptions = [
 
 function Settings() {
   const [tp] = useTranslation("mainPages");
-  const [user, setUser] = useState(null); 
-
-  const [username, setUsername] = useState(null);
-  const [email, setEmail] = useState(null);
-  const [country, setCountry] = useState(null);
-  const [nativeLanguage, setNativeLanguage] = useState(null);
-  const [learningLanguages, setLearningLanguages] = useState(null);
-  const [learningLanguagesText, setLearningLanguagesText] = useState(null);
-  const [nativeLanguageText, setNativeLanguageText] = useState(null);
-  const [biography, setBiography] = useState(null);
+  const [username, setUsername] = useState("");
+  const [oldUsername, setOldUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [oldEmail, setOldEmail] = useState("");
+  const [country, setCountry] = useState("");
+  const [nativeLanguage, setNativeLanguage] = useState("");
+  const [learningLanguages, setLearningLanguages] = useState("");
+  const [learningLanguagesText, setLearningLanguagesText] = useState("");
+  const [nativeLanguageText, setNativeLanguageText] = useState("");
+  const [profilePicture512, setProfilePicture512] = useState("");
+  const [profilePicture64, setProfilePicture64] = useState("");
+  const [biography, setBiography] = useState("");
   const [errorMessage, setErrorMessage] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const navigate = useNavigate();
-  const fetchProtectedData = async () => {
 
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_SERVER_URI}/protected`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log(data);
-    } catch (error) {
-      console.error("Fetch error:", error);
-      navigate("/landing");
-    } 
-  };
-  useEffect(() => {
-    fetchProtectedData();
-  }, []);
   const fetchUserData = async () => {
+
     setLoadingUser(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/user`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      setUser(data);
-      setBiography(data.biography || "");
-      setEmail(data.email || "");
-      setUsername(data.username || "");
-      setCountry(data.country || "");
-      setNativeLanguage(data.nativeLanguage || []);
-      setLearningLanguages(data.learningLanguages || []);
-      switch (data.learningLanguages[0]){
-        case "de":
-          setLearningLanguagesText("Deutsch");
-          break;
-        case "gb":
-          setLearningLanguagesText("English");
-          break;
-        default:
-          setLearningLanguagesText("X");
-          break;
-      }
-      switch (data.nativeLanguage[0]){
-        case "de":
-          setNativeLanguageText("Deutsch");
-          break;
-        case "gb":
-          setNativeLanguageText("English");
-          break;
-        default:
-          setNativeLanguageText("X");
-          break;
-      }
+      UserService.getUser()
+        .then((res) => {
+          const data = res.data;
+          setBiography(data.biography || "");
+          setEmail(data.email || "");
+          setOldEmail(data.email || "");
+          setUsername(data.username || "");
+          setOldUsername(data.username || "");
+          setCountry(data.country || "");
+          setNativeLanguage(data.nativeLanguage || []);
+          setLearningLanguages(data.learningLanguages || []);
+          setProfilePicture512(data.profilePicture512 || "");
+          setProfilePicture64(data.profilePicture64 || "");
+          switch (data.learningLanguages[0]) {
+            case "de":
+              setLearningLanguagesText("Deutsch");
+              break;
+            case "gb":
+              setLearningLanguagesText("English");
+              break;
+            default:
+              setLearningLanguagesText("X");
+              break;
+          }
+          switch (data.nativeLanguage[0]) {
+            case "de":
+              setNativeLanguageText("Deutsch");
+              break;
+            case "gb":
+              setNativeLanguageText("English");
+              break;
+            default:
+              setNativeLanguageText("X");
+              break;
+          }
+        })
+        .catch((error) => {
+          if (error.response.status === 401) {
+            navigate("/landing");
+          }
+          console.error("Fehler:", error);
+        });
     } catch (error) {
       console.error("Fetch error:", error);
     } finally {
       setLoadingUser(false);
-      
     }
   };
   useEffect(() => {
     fetchUserData();
   }, [navigate]);
 
-  if (loadingUser) {
-    return (
-      <div className=" vh-100 d-flex flex-column align-items-center justify-content-center">
-        <div
-          className="spinner-border text-primary "
-          style={{ width: "6rem", height: "6rem" }}
-        ></div>
-        {loadingUser && <p className="text-light">Loading User...</p>}
-      </div>
-    );
-  }
   let userCountry = countryOptions;
- 
-  
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/updateUser`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache",
-        },
-        body: JSON.stringify({
-          username: username !== user.username ? username : undefined,
-          email,
-          biography,
-          country,
-          nativeLanguage,
-          learningLanguages,
-        }),
-        credentials: 'include',
-      });
+      const data = {
+        username: username,
+        oldusername: oldUsername,
+        email: email,
+        oldemail: oldEmail,
+        biography: biography,
+        country: country,
+        nativeLanguage: nativeLanguage,
+        learningLanguages: learningLanguages,
+      };
 
-      if (response.status === 200) {
-        console.log("Update successful!");
-        sessionStorage.setItem("username", username);
-        sessionStorage.setItem("profilePicture64", user.profilePicture64);
-        sessionStorage.setItem("learningLanguages", learningLanguages);
-        sessionStorage.setItem("nativeLanguage", nativeLanguage);
-        navigate("/profile");
-      } else {
-        const errorMessage = await response.json();
-        console.error(
-          `Update failed: ${response.status} - ${JSON.stringify(errorMessage)}`
-        );
-        setErrorMessage(errorMessage.message);
-      }
+      UserService.updateUser(data)
+        .then((res) => {
+          sessionStorage.setItem("username", username);
+          sessionStorage.setItem("profilePicture64", profilePicture64);
+          sessionStorage.setItem("learningLanguages", learningLanguages);
+          sessionStorage.setItem("nativeLanguage", nativeLanguage);
+          sessionStorage.setItem("country", country);
+          sessionStorage.setItem("biography", biography);
+          
+          navigate("/profile");
+        })
+        .catch((error) => {
+          setErrorMessage(error.response.data.message);
+          console.error("Fehler:", error.response.data.message);
+        });
     } catch (error) {
       console.error("Error when sending the update form:", error);
     }
   };
 
+  if (loadingUser) {
+    return <LoadingSpinner />;
+  }
   // * HTML code of the Settings page.
   return (
     {
@@ -188,10 +156,9 @@ function Settings() {
 
           <form
             onSubmit={handleSubmit}
-            className="bg-light p-3 m-5 rounded text-dark text-center form-size"
-          >
+            className="bg-light p-3 m-5 rounded text-dark text-center form-size">
             <img
-              src={user.profilePicture512}
+              src={profilePicture512}
               alt="Profilbild"
               className="rounded-circle img-fluid w-25 shadow-sm"
             />
@@ -250,9 +217,7 @@ function Settings() {
                 value={languageOptions.find(
                   (option) => option.value === nativeLanguage
                 )}
-                onChange={(option) =>
-                  setNativeLanguage(option.value)
-                }
+                onChange={(option) => setNativeLanguage(option.value)}
                 options={languageOptions}
               />
             </div>
@@ -265,9 +230,7 @@ function Settings() {
                 value={languageOptions.find(
                   (option) => option.value === learningLanguages
                 )}
-                onChange={(option) =>
-                  setLearningLanguages(option.value)
-                }
+                onChange={(option) => setLearningLanguages(option.value)}
                 options={languageOptions}
               />
             </div>

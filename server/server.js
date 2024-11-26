@@ -429,26 +429,31 @@ app.get("/verify/:token", async function (req, res) {
 /**
  * * Update the users data.
  * **/
-app.post("/updateUser", authenticateToken, async (req, res) => {
+/* app.post("/updateUser", authenticateToken, async (req, res) => {
   try {
-    const { username, biography, email, country, nativeLanguage, learningLanguages } = req.body;
+    const { username, oldusername, email,oldemail,biography, country, nativeLanguage, learningLanguages } = req.body.data;
+    
     const userId = req.user.userId; 
     const user = await User.findById(userId);
+
     if (user && user.guest && user.guest === 'true') {
       return res.status(403).send('Settings changes are not allowed for guest users.');
     }
 
-    if (username) {
+    if (username !== oldusername) {
       const newUsernameExist = await User.findOne({ username });
       if (newUsernameExist) {
+        console.log("Username already taken");
         return res.status(400).json({ success: false, message: "Username already taken" });
       }
     }
 
+    if(email !== oldemail){
     const emailRegex = /^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/;
     if (!email || !emailRegex.test(email)) {
       return res.status(400).json({ success: false, message: "Invalid e-mail address" });
     }
+  }
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
@@ -461,8 +466,9 @@ app.post("/updateUser", authenticateToken, async (req, res) => {
     console.error("Error during user update:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
-});
+}); */
 app.get("/user", authenticateToken, userController.getUser);
+app.post("/updateUser", authenticateToken, userController.updateUser);
 app.post("/biography", authenticateToken, userController.updateBiography);
 app.get("/getGrammarData",authenticateToken, grammarController.getGrammarData);
 app.get("/lessonProgress", authenticateToken, lessonController.getLessonProgress);

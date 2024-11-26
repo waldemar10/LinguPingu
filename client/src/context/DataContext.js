@@ -1,30 +1,15 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useState } from 'react';
 
-const DataContext = createContext();
+export const DataContext = createContext();
 
 export const DataProvider = ({ children }) => {
-  const [loadedData, setLoadedData] = useState();
+  const [selectedGrammarLessonData, setSelectedGrammarLessonData] = useState();
   const [selectedTab, setSelectedTab] = useState();
 
 
   return (
-    <DataContext.Provider value={{ loadedData, setLoadedData,selectedTab,setSelectedTab }}>
+    <DataContext.Provider value={{ selectedGrammarLessonData,setSelectedGrammarLessonData,selectedTab,setSelectedTab }}>
       {children}
     </DataContext.Provider>
   );
-};
-
-export const useData = () => {
-  const context = useContext(DataContext);
-  if (!context) {
-    throw new Error('useData must be used within a DataProvider');
-  }
-  return context;
-};
-export const useSelectedTab = () => {
-  const context = useContext(DataContext);
-  if (!context) {
-    throw new Error('useData must be used within a DataProvider');
-  }
-  return context;
 };

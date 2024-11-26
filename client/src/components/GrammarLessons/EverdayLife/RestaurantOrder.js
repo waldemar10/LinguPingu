@@ -1,9 +1,7 @@
 import React from 'react';
 
-const RestaurantOrder = ({ nativeLanguage, targetLanguage, isLesson }) => {
-    if (!isLesson) {
-        return null;
-    }
+const RestaurantOrder = ({ nativeLanguage, targetLanguage }) => {
+
     const getLesson = () => {
 
         if (nativeLanguage === 'de') {

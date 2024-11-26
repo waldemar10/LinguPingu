@@ -6,9 +6,11 @@ import { Container, Row, Col, Image } from "react-bootstrap";
 import { FaEdit } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import UserService from "../services/UserService";
+import LoadingSpinner from "../components/LoadingSpinner";
+
 function ProfilePage() {
   const [t] = useTranslation("profile");
-
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState();
   const [country, setCountry] = useState();
@@ -17,65 +19,30 @@ function ProfilePage() {
   const [nativeLanguage, setNativeLanguage] = useState();
   const [profilePicture512,setProfilePicture512] = useState();
   const [loadingUser, setLoadingUser] = useState(true);
-  const { id, setId } = useContext(UserContext);
   const navigate = useNavigate();
-  const fetchProtectedData = async () => {
 
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_SERVER_URI}/protected`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log(data);
-    } catch (error) {
-      console.error("Fetch error:", error);
-      navigate("/landing");
-    } 
-  };
-  useEffect(() => {
-    fetchProtectedData();
-  }, []);
   const handleEditClick = () => {
     setIsEditing(true);
   };
 
   const fetchUserData = async () => {
-    
+      setLoadingUser(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/user`, {
-        method: "GET",
-        credentials: "include",
+      UserService.getUser().then((res) => {
+        const data = res.data;
+        setUsername(data.username);
+        setBiography(data.biography);
+        setProfilePicture512(data.profilePicture512);
+        setCountry(data.country);
+        setLearningLanguage(data.learningLanguages);
+        setNativeLanguage(data.nativeLanguage);
+      }).catch((error) => {
+        if (error.response.status === 401) {
+          navigate("/landing");
+        }
+        console.error("Fehler:", error);
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setUsername(data.username);
-      setBiography(data.biography);
-      setProfilePicture512(data.profilePicture512);
-      setCountry(data.country);
-      setLearningLanguage(data.learningLanguages);
-      setNativeLanguage(data.nativeLanguage);
-      sessionStorage.setItem("username", data.username);
-      sessionStorage.setItem("biography", data.biography);
-      sessionStorage.setItem("profilePicture64", data.profilePicture64);
-      sessionStorage.setItem("profilePicture512", data.profilePicture512);
-      sessionStorage.setItem("country", data.country);
-      sessionStorage.setItem("verified", data.verified);
-      localStorage.setItem(`${data._id}_learningLanguages`, data.learningLanguages[0]);
-      localStorage.setItem(`${data._id}_nativeLanguage`, data.nativeLanguage[0]);
-      localStorage.setItem(`${data._id}_appLanguage`, data.nativeLanguage[0]);
+     
     } catch (error) {
       console.error("Fetch error:", error);
     } finally {
@@ -83,41 +50,10 @@ function ProfilePage() {
     }
   };
   useEffect(() => {
-    setLoadingUser(true);
-    if (sessionStorage.getItem("username") !== null) {
-      setUsername(sessionStorage.getItem("username"));
-    }
-    if(sessionStorage.getItem("biography") !== null){
-      setBiography(sessionStorage.getItem("biography"));
-    }
-    if (sessionStorage.getItem("profilePicture512") !== null) {
-      setProfilePicture512(sessionStorage.getItem("profilePicture512"));
-    }
-    if (sessionStorage.getItem("country") !== null) {
-      setCountry(sessionStorage.getItem("country"));
-    }
-    if (localStorage.getItem(`${id}_learningLanguages`) !== null) {
-      setLearningLanguage(localStorage.getItem(`${id}_learningLanguages`));
-    }
-    if (localStorage.getItem(`${id}_nativeLanguage`) !== null) {
-      setNativeLanguage(localStorage.getItem(`${id}_nativeLanguage`));
-    }
-    if (
-      !sessionStorage.getItem("username") ||
-      !localStorage.getItem(`${id}_learningLanguages`) ||
-      !localStorage.getItem(`${id}_nativeLanguage`) ||
-      !sessionStorage.getItem("profilePicture512") ||
-      !sessionStorage.getItem("country")
-    ) {
-      fetchUserData();
-    }else{
-      setLoadingUser(false);
-    }
+    fetchUserData();
   }, []);
 
-  if (loadingUser) {
-    return <div>Loading...</div>;
-  }
+  
 
   const handleSaveClick = async (event) => {
     event.preventDefault();
@@ -125,29 +61,23 @@ function ProfilePage() {
     setIsEditing(false);
 
     try {
-      fetch(`${process.env.REACT_APP_SERVER_URI}/biography`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: username,
-          biography: biography,
-        }),
-        credentials: "include",
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("Erfolg:", data);
-        })
-        .catch((error) => {
-          console.error("Fehler:", error);
-        });
+      const data = {
+        username: username,
+        biography: biography
+      };
+      UserService.updateBiography(data).then(() => {
+        console.log("Erfolgreich gespeichert");
+      }).catch((error) => {
+        console.error("Fehler:", error);
+      });
+
     } catch (error) {
       console.error("Fehler:", error);
     }
   };
-
+  if (loadingUser) {
+    return <LoadingSpinner />;
+  }
   return (
     <div>
       {/**

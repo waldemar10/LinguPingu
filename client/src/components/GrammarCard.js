@@ -1,128 +1,61 @@
-import { useMemo, useState, useEffect,useContext } from "react";
+import { useState, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { UserContext } from "../context/UserContext";
+
+import { useTranslation } from "react-i18next";
+import { LanguageContext } from "../context/LanguageContext";
+import useShuffledWords from "../hooks/useShuffledWords";
+import GrammarService from "../services/GrammarService";
 import happyPingu from "../images/PinguIcons/happyPingu.png";
 import sadPingu from "../images/PinguIcons/sadPingu.png";
 import "../styles/Grammar.css";
-import { useTranslation } from "react-i18next";
-
-const GERMAN = "de";
-const ENGLISH = "en";
-// Shuffle array function
-const shuffleArray = (array) => {
-  const shuffledArray = [...array];
-  for (let i = shuffledArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
-  }
-  return shuffledArray;
-};
-
-// Shuffle word array function
-const shuffleWordArray = (array, dataArray, errorWords) => {
-  const shuffledArray = [...array, ...errorWords];
-  const dataSentence = dataArray.replace(/,/g, " ,");
-
-  for (let i = shuffledArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
-
-    const shuffledSentence = shuffledArray.join(" ");
-
-    // Check if the shuffled sentence is the same as the data sentence
-    if (shuffledSentence === dataSentence) {
-      // If it is the same, shuffle again
-      return shuffleWordArray(array, dataArray, errorWords);
-    }
-  }
-
-  return shuffledArray;
-};
-
-// Function for creating error word array
-const createErrorWordArray = (errorWords, targetLanguage) => {
-  const shuffledArray = [...errorWords];
-
-  switch (targetLanguage) {
-    case GERMAN:
-      return shuffledArray[0]?.err_de?.split(";") ?? [];
-    case ENGLISH:
-      return shuffledArray[0]?.err_en?.split(";") ?? [];
-    default:
-      return [];
-  }
-};
-
-var counterForClickedWords = 0;
 
 function GrammarCard({ title, content, data, passIsFinished }) {
   const [t] = useTranslation("grammarHub");
   const { lessonIndex, grammarIndex } = useParams();
-  const [randomItem, setRandomItem] = useState(null);
   const [selectedWords, setSelectedWords] = useState([]);
-  const [visibleWords, setVisibleWords] = useState([]);
   const [isWrong, setIsWrong] = useState(false);
   const [isRight, setIsRight] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-  const [isGuest, setIsGuest] = useState(false);
-  const { id, setId } = useContext(UserContext);
+  const { nativeLanguage, learningLanguage } = useContext(LanguageContext);
   const navigate = useNavigate();
 
-  let languageKey = "en"; // Default language key
-  let nativeLanguageKey = "en"; // Default native language key
-  if (localStorage.getItem(`${id}_learningLanguages`) !== null) {
-    languageKey = localStorage.getItem(`${id}_learningLanguages`);
-    if (languageKey === "gb") {
-      languageKey = "en";
-    }
-  }
-  if (localStorage.getItem(`${id}_nativeLanguage`) !== null) {
-    nativeLanguageKey = localStorage.getItem(`${id}_nativeLanguage`);
-  }
+  const {
+    visibleWords,
+    setVisibleWords,
+    index,
+    sentence,
+    goToNextSentence,
+    dontGoToNextSentence,
+  } = useShuffledWords(content, learningLanguage);
 
-  const shuffleContent = useMemo(() => shuffleArray(content), [content]);
+  const TIMEOUT = 1500;
 
-
-  const updateVisibleWords = () => {
-    if (shuffleContent.length > 0) {
-      setRandomItem(shuffleContent[0]);
-
-      const errorWordArray = createErrorWordArray(shuffleContent, languageKey);
-      const initialVisibleWords = shuffleContent[0][languageKey]
-        .replace(/,/g, " ,")
-        .split(" ");
-      setVisibleWords(
-        shuffleWordArray(
-          initialVisibleWords,
-          shuffleContent[0][languageKey],
-          errorWordArray
-        )
-      );
-    }
-  };
-
-  useEffect(() => {
-    updateVisibleWords();
-  }, [shuffleContent]);
+  const correctSentence = sentence
+    ? sentence[learningLanguage].replace(/,/g, " ,")
+    : "";
 
   const handleWordClick = (word) => {
-    const newVisibleWords = visibleWords.filter(
-      (visibleWord) => visibleWord !== word
-    );
-    setVisibleWords(newVisibleWords);
+    const allVisibleWords = [...visibleWords];
+    const wordIndex = allVisibleWords.indexOf(word);
+    if (wordIndex === -1) return; // If the word is not in the array, return
+
+    allVisibleWords.splice(wordIndex, 1); // Remove the word from the array
+
+    setVisibleWords(allVisibleWords);
     setSelectedWords([...selectedWords, word]);
     removeWordFromVisible(word);
-    counterForClickedWords++;
   };
 
   const handleSelectedWordClick = (word) => {
-    const newSelectedWords = selectedWords.filter(
-      (selectedWord) => selectedWord !== word
-    );
-    setSelectedWords(newSelectedWords);
+    const allSelectedWords = [...selectedWords];
+    const wordIndex = allSelectedWords.indexOf(word);
+    if (wordIndex === -1) return;
+
+    allSelectedWords.splice(wordIndex, 1);
+
+    setSelectedWords(allSelectedWords);
     setVisibleWords([...visibleWords, word]);
-    counterForClickedWords--;
   };
 
   const handleAnswerFeedback = (isCorrect) => {
@@ -130,199 +63,157 @@ function GrammarCard({ title, content, data, passIsFinished }) {
     setTimeout(() => {
       setIsRight(false);
       setIsWrong(false);
-    }, 1500);
+    }, TIMEOUT);
   };
 
   const removeWordFromVisible = (word) => {
     const index = visibleWords.indexOf(word);
-    if (index !== -1) {
-      const newVisibleWords = [...visibleWords];
-      newVisibleWords.splice(index, 1);
-      setVisibleWords(newVisibleWords);
-    }
+    if (index === -1) return;
+
+    const newVisibleWords = [...visibleWords];
+    newVisibleWords.splice(index, 1);
+    setVisibleWords(newVisibleWords);
   };
-
-  // Check if the user answer is correct
-  const checkAnswer = () => {
-    // Disable the button to prevent spamming
+  const disableCheckAnswerButton = () => {
     setIsButtonDisabled(true);
-    const userAnswer = selectedWords.join(" ");
-
-    // Check if the user answer is correct
-    if (userAnswer === randomItem[languageKey].replace(/,/g, " ,")) {
-      handleAnswerFeedback(true);
-      // Set a timeout to show the next item
-      setTimeout(() => {
-        try {
-          // Shuffle the content array
-          shuffleContent.shift();
-          setSelectedWords([]);
-          const errorWordArray = createErrorWordArray(
-            shuffleContent,
-            languageKey
-          );
-          setRandomItem(shuffleContent[0]);
-          const initialVisibleWords = shuffleContent[0][languageKey]
-            .replace(/,/g, " ,")
-            .split(" ");
-          setVisibleWords(
-            shuffleWordArray(
-              initialVisibleWords,
-              shuffleContent[0][languageKey],
-              errorWordArray
-            )
-          );
-        } catch (error) {
-          setIsFinished(true);
-          passIsFinished(true);
-          updateLessonCompletion(
-            data[lessonIndex].lessons[grammarIndex].title_en
-          );
-
-          
-          
-        }
-      }, 1500);
-    } else {
-      handleAnswerFeedback(false);
-      setSelectedWords([]);
-      const errorWordArray = createErrorWordArray(shuffleContent, languageKey);
-      const initialVisibleWords = shuffleContent[0][languageKey]
-        .replace(/,/g, " ,")
-        .split(" ");
-      setVisibleWords(
-        shuffleWordArray(
-          initialVisibleWords,
-          shuffleContent[0][languageKey],
-          errorWordArray
-        )
-      );
-    }
-
+    // Timeout to enable the button again. Prevents spamming
     setTimeout(() => {
       setIsButtonDisabled(false);
-    }, 1500);
-    counterForClickedWords = 0;
+    }, TIMEOUT);
   };
 
-  // Update the lesson completion
-  const updateLessonCompletion = async (title_en) => {
+  const checkAnswer = () => {
+    disableCheckAnswerButton();
 
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_SERVER_URI}/updateLessonCompletion`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            title_en: title_en,
-          }),
-          credentials: "include",
-        }
-      );
-      if(response.status === 403){
-        console.error("Guest status:", Response.status);
-      }else if(response.ok){
-        let completedLessons =
-            JSON.parse(localStorage.getItem(`${id}_completedLessons`)) || [];
-
-          if (
-            !completedLessons.includes(
+    const userAnswer = selectedWords.join(" ");
+    if (userAnswer !== correctSentence) {
+      handleAnswerFeedback(false);
+      setSelectedWords([]);
+      dontGoToNextSentence();
+      return;
+    } else if (userAnswer === correctSentence) {
+      handleAnswerFeedback(true);
+      // Timeout to show the feedback animation
+      setTimeout(() => {
+        try {
+          if (index < content.length - 1) {
+            goToNextSentence();
+            setSelectedWords([]);
+          } else {
+            setIsFinished(true);
+            passIsFinished(true);
+            setLessonCompletion(
               data[lessonIndex].lessons[grammarIndex].title_en
-            )
-          ) {
-            completedLessons.push(
-              data[lessonIndex].lessons[grammarIndex].title_en
-            );
-            localStorage.setItem(
-              `${id}_completedLessons`,
-              JSON.stringify(completedLessons)
             );
           }
-      }else{
-        console.error("Error when setting completed to true:", response.status);
-      }
+        } catch (error) {
+          console.error("Error when updating lesson completion:", error);
+        }
+      }, TIMEOUT);
+    } else {
+      return;
+    }
+  };
+
+  const setLessonCompletion = async (title_en) => {
+    try {
+      const data = {
+        title_en: title_en,
+      };
+      GrammarService.updateLessonCompletion(data)
+        .then((res) => {
+          if (res.status === 403) {
+            console.error("Guest status:", res.status);
+            navigate("/landing");
+          }
+          console.log("Lektion erfolgreich abgeschlossen:", res);
+        })
+        .catch((error) => {
+          console.error("Fehler beim Abschließen der Lektion:", error);
+        });
     } catch (error) {
       console.error("Error when setting completed to true:", error);
     }
   };
+  const Completion = () => (
+    <div className={`g-box text-center `}>
+      <h1>{t("completion.title")}</h1>
+      <div className="d-flex flex-column align-items-center bg-light p-3 rounded text-dark ">
+        <p>{t("completion.message")}</p>
+        <img className="g-img-finished m-2" src={happyPingu}></img>
+        <button
+          className="btn btn-primary"
+          onClick={() => navigate("/grammar")}>
+          {t("completion.button")}
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <>
-      <div className={`g-box ${isFinished ? "hidden" : ""}`}>
-        <h1>{title}</h1>
+      {isFinished ? (
+        <Completion />
+      ) : (
+        <div className={`g-box `}>
+          <h1>{title}</h1>
 
-        {randomItem && visibleWords && (
-          <div
-            className={`bg-light p-3 rounded text-dark position-relative ${
-              isWrong ? "wrong" : ""
-            } ${isRight ? "right" : ""}`}>
-            <div>
-              <p>
-                <big>{randomItem[nativeLanguageKey]}</big>
-              </p>
-              <p>
-                <small>{t("translationSentence")}</small>
-              </p>
+          {sentence && visibleWords && (
+            <div
+              className={`bg-light p-3 rounded text-dark position-relative 
+              ${isWrong ? "wrong" : ""} 
+              ${isRight ? "right" : ""}`}>
               <div>
+                <p>
+                  <big>{sentence[nativeLanguage]}</big>
+                </p>
+                <p>
+                  <small>{t("translationSentence")}</small>
+                </p>
                 <div>
-                  <span
-                    className={`placeholder ${
-                      counterForClickedWords > 0 ? "hidden" : ""
-                    }`}></span>
-                  {selectedWords.map((word, index) => (
+                  <div>
+                    <span
+                      className={`placeholder ${
+                        selectedWords.length > 0 ? "hidden" : ""
+                      }`}></span>
+                    {selectedWords.map((word, index) => (
+                      <button
+                        className="btn-selected-word"
+                        key={index}
+                        onClick={() => handleSelectedWordClick(word)}>
+                        {word}
+                      </button>
+                    ))}
+
+                    {isWrong && <img src={sadPingu} className="g-lesson-img" />}
+                    {isRight && (
+                      <img src={happyPingu} className="g-lesson-img" />
+                    )}
+
+                    <hr />
+                  </div>
+                </div>
+                <p>
+                  {visibleWords.map((word, index) => (
                     <button
-                      className="btn-selected-word"
+                      className="btn-select-word"
                       key={index}
-                      onClick={() => handleSelectedWordClick(word)}>
+                      onClick={() => handleWordClick(word)}>
                       {word}
                     </button>
                   ))}
-
-                  {isWrong && (
-                    <img src={sadPingu} className="g-lesson-img"></img>
-                  )}
-                  {isRight && (
-                    <img src={happyPingu} className="g-lesson-img"></img>
-                  )}
-
-                  <hr></hr>
-                </div>
+                </p>
               </div>
-              <p>
-                {visibleWords.map((word, index) => (
-                  <button
-                    className="btn-select-word"
-                    key={index}
-                    onClick={() => handleWordClick(word)}>
-                    {word}
-                  </button>
-                ))}
-              </p>
+              <button
+                className="btn btn-primary"
+                onClick={checkAnswer}
+                disabled={isButtonDisabled}>
+                Check
+              </button>
             </div>
-            <button
-              className="btn btn-primary"
-              onClick={checkAnswer}
-              disabled={isButtonDisabled}>
-              Check
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className={`g-box text-center ${isFinished ? "" : "hidden"}`}>
-        <h1>{t("completion.title")}</h1>
-        <div className="d-flex flex-column align-items-center bg-light p-3 rounded text-dark ">
-          <p>{t("completion.message")}</p>
-          <img className="g-img-finished m-2" src={happyPingu}></img>
-          <button
-            className="btn btn-primary"
-            onClick={() => navigate("/grammar")}>
-            {t("completion.button")}
-          </button>
+          )}
         </div>
-      </div>
+      )}
     </>
   );
 }

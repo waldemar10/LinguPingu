@@ -3,17 +3,18 @@ import { LanguageContext } from "../context/LanguageContext";
 import { Link } from "react-router-dom";
 import NavigationBar from "../components/NavigationBar";
 import { useTranslation } from "react-i18next";
-import { UserContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 
 import happyPingu from "../images/PinguIcons/happyPingu.png";
 import "../styles/Home.css";
+import LoadingSpinner from "../components/LoadingSpinner";
+import UserService from "../services/UserService";
 
 /**
  * @returns {JSX.Element} The Home page component.
  */
 const HomePage = () => {
-  const [t, i18next] = useTranslation("mainPages");
+  const [t] = useTranslation("mainPages");
   const navigate = useNavigate();
   // * The randomSlogan variable is used to display a random slogan on the Home page.
   const postTexts = {
@@ -44,14 +45,9 @@ const HomePage = () => {
   };
 
   // * The UserContext is used to access the user data.
-  /* const { user } = useContext(UserContext); */
-  /* const [user, setUser] = useState(null);  */
-  // * The state of the header is used to determine whether the header should be displayed or not.
-  const [showHeader, setShowHeader] = useState(true);
-  const [loading, setLoading] = useState(true);
   const [loadingUser, setLoadingUser] = useState(false);
   const [randomSlogan, setRandomSlogan] = useState("");
-  const { id, setId } = useContext(UserContext);
+
   const {
     appLanguage,
     setAppLanguage,
@@ -59,57 +55,36 @@ const HomePage = () => {
     setNativeLanguage,
   } = useContext(LanguageContext);
 
-  const fetchProtectedData = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_SERVER_URI}/protected`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log(data);
-    } catch (error) {
-      console.error("Fetch error:", error);
-      navigate("/landing");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchUserData = async () => {
     setLoadingUser(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_SERVER_URI}/user`, {
-        method: "GET",
-        credentials: "include",
+      UserService.getUser().then((res) => {
+      const sessionItems = {
+        username: res.data.username,
+        biography: res.data.biography,
+        profilePicture64: res.data.profilePicture64,
+        profilePicture512: res.data.profilePicture512,
+        country: res.data.country,
+        verified: res.data.verified,
+        learningLanguages: res.data.learningLanguages[0] === "gb" ? "en" : res.data.learningLanguages[0],
+        nativeLanguage: res.data.nativeLanguage,
+      };
+      Object.entries(sessionItems).forEach(([key, value]) => {
+        sessionStorage.setItem(key, value);
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if(localStorage.getItem(`${res.data.username}_appLanguage`) === null){
+      localStorage.setItem(`${res.data.username}_appLanguage`, res.data.nativeLanguage[0]);
       }
-
-      const data = await response.json();
-      setId(data._id);
-      sessionStorage.setItem("username", data.username);
-      sessionStorage.setItem("biography", data.biography);
-      sessionStorage.setItem("profilePicture64", data.profilePicture64);
-      sessionStorage.setItem("profilePicture512", data.profilePicture512);
-      sessionStorage.setItem("country", data.country);
-      sessionStorage.setItem("verified", data.verified);
-      localStorage.setItem(`${data._id}_learningLanguages`, data.learningLanguages[0]);
-      localStorage.setItem(`${data._id}_nativeLanguage`, data.nativeLanguage[0]);
-      localStorage.setItem(`${data._id}_appLanguage`, data.nativeLanguage[0]);
-      setLearningLanguage(data.learningLanguages[0]);
-      setNativeLanguage(data.nativeLanguage[0]);
-      setAppLanguage(data.appLanguage);
+      setLearningLanguage(res.data.learningLanguages[0] ? "gb" : "en");
+      setNativeLanguage(res.data.nativeLanguage[0]);
+      setAppLanguage(res.data.appLanguage);
+    }).catch((error) => {
+      if(error.response.status === 401){
+        navigate("/landing");
+      }
+      console.error("Fetch error:", error);
+    });
     } catch (error) {
       console.error("Fetch error:", error);
     } finally {
@@ -118,19 +93,14 @@ const HomePage = () => {
   };
 
   useEffect(() => {
-    if (
-      !sessionStorage.getItem("username") ||
-      !sessionStorage.getItem("profilePicture64") ||
-      !sessionStorage.getItem("country")||
-      !localStorage.getItem(`${id}_learningLanguages`)||
-      !localStorage.getItem(`${id}_nativeLanguage`) ||
-      !localStorage.getItem(`${id}_appLanguage`)
-    ) {
+    const requiredKeys = ["username", "learningLanguages", "nativeLanguage"];
+  const isSessionStorageEmpty = requiredKeys.some((key) => !sessionStorage.getItem(key));
+    if (isSessionStorageEmpty || localStorage.getItem(`${sessionStorage.getItem("username")}_appLanguage`) === null) {
       fetchUserData();
     } else {
-      setLearningLanguage(localStorage.getItem(`${id}_learningLanguages`));
-      setNativeLanguage(localStorage.getItem(`${id}_nativeLanguage`));
-      setAppLanguage(localStorage.getItem(`${id}_appLanguage`));
+      setLearningLanguage(sessionStorage.getItem("learningLanguages"));
+      setNativeLanguage(sessionStorage.getItem("nativeLanguage"));
+      setAppLanguage(localStorage.getItem(`${sessionStorage.getItem("username")}_appLanguage`));
     }
     if (postTexts[appLanguage]) {
       const selectedSlogans = postTexts[appLanguage];
@@ -143,15 +113,11 @@ const HomePage = () => {
         selectedSlogans[Math.floor(Math.random() * selectedSlogans.length)]
       );
     }
-  }, [navigate]);
+  }, []);
 
-  useEffect(() => {
-    
-    fetchProtectedData();
-  }, [navigate]);
 
-  if (loading || loadingUser) {
-    return <div>Loading...</div>;
+  if (loadingUser) {
+    return <LoadingSpinner />;
   }
 
   // * HTML code of the HomePage component.
@@ -162,26 +128,6 @@ const HomePage = () => {
          * The Navbar component is displayed at the top of the Home page.
          */}
         <NavigationBar className="mb-5" />
-
-        {/**
-         * Header for the Home page.
-         * The header is only displayed if the user is logged in and the account is not yet verified.
-         * It can be closed by clicking on the close button.
-         */}
-        {/* sessionStorage.getItem("verified") && showHeader && (
-          <div
-            className="alert-width alert alert-v2 alert-warning d-inline-flex justify-content-between align-items-center py-2"
-            role="alert"
-            style={{ marginTop: "2rem", zIndex: "1" }}>
-            <p className="mb-0 me-2 align-self-center">
-              {t("homePage.verificationText")}
-            </p>
-            <button
-              type="button"
-              className="btn-close"
-              onClick={() => setShowHeader(false)}></button>
-          </div>
-        ) */}
 
         {/**
          * Big "LinuPingu" headline of the Home page.
@@ -198,17 +144,6 @@ const HomePage = () => {
            */}
           <p className="text-center fs-5 text-white mt-3">{randomSlogan}</p>
 
-          {/**
-           * Button that links to the MemoryGame page.
-           */}
-          {/*  <div className="d-flex justify-content-center mt-5">
-            <Link
-              className="btn btn-primary btn-lg mt-5"
-              to="/collection/memory"
-            >
-              {"Memory"}
-            </Link>
-          </div> */}
         </div>
         <div className="vh100">
           <img src={happyPingu} className="img-home user-select-none"></img>
