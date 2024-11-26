@@ -6,10 +6,10 @@ import countries from "i18n-iso-countries";
 import { useTranslation } from "react-i18next";
 import Select from "react-select";
 
-import "../styles/ProfilePage.css";
+
 import UserService from "../services/UserService";
 import LoadingSpinner from "../components/LoadingSpinner";
-
+import "../styles/ProfilePage.css";
 countries.registerLocale(require("i18n-iso-countries/langs/de.json"));
 countries.registerLocale(require("i18n-iso-countries/langs/en.json"));
 

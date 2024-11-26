@@ -1,21 +1,24 @@
-
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useContext } from "react";
 import { LanguageContext } from "../context/LanguageContext";
+import { UserContext } from "../context/UserContext";
 import UserService from "../services/UserService";
 import { useNavigate } from "react-router-dom";
+
 const useUserData = (isEmpty) => {
-    
-    const {
-      setAppLanguage,
-      setLearningLanguage,
-      setNativeLanguage,
-    } = useContext(LanguageContext);
-    const navigate = useNavigate();
-    const [loadingUser, setLoadingUser] = useState(false);
-const fetchUserData = async () => {
-    if(!isEmpty) return;
-    console.log("fetchUserData");
-    setLoadingUser(true);    
+  const {
+    setUsername,
+    setProfilePicture64,
+    setProfilePicture512,
+    setBiography,
+    setCountry,setIsLoadingUser
+  } = useContext(UserContext);
+  const { setAppLanguage, setLearningLanguage, setNativeLanguage } =
+    useContext(LanguageContext);
+  const navigate = useNavigate();
+
+  const fetchUserData = async () => {
+    if (!isEmpty) return;
+    setIsLoadingUser(true);
     try {
       UserService.getUser()
         .then((res) => {
@@ -35,15 +38,22 @@ const fetchUserData = async () => {
           Object.entries(sessionItems).forEach(([key, value]) => {
             sessionStorage.setItem(key, value);
           });
-          if (
-            !localStorage.getItem("LinguPingu_appLanguage")
-          ) {
+          if (!localStorage.getItem("LinguPingu_appLanguage")) {
             localStorage.setItem(
               "LinguPingu_appLanguage",
               res.data.nativeLanguage[0]
             );
           }
-          setLearningLanguage(res.data.learningLanguages[0] === "gb" ? "en" : res.data.learningLanguages[0]);
+          setUsername(res.data.username);
+          setProfilePicture64(res.data.profilePicture64);
+          setProfilePicture512(res.data.profilePicture512);
+          setBiography(res.data.biography);
+          setCountry(res.data.country);
+          setLearningLanguage(
+            res.data.learningLanguages[0] === "gb"
+              ? "en"
+              : res.data.learningLanguages[0]
+          );
           setNativeLanguage(res.data.nativeLanguage[0]);
           setAppLanguage(res.data.appLanguage);
         })
@@ -56,13 +66,12 @@ const fetchUserData = async () => {
     } catch (error) {
       console.error("Fetch error:", error);
     } finally {
-        setLoadingUser(false);
+        setIsLoadingUser(false);
     }
-  }
+  };
   useEffect(() => {
     fetchUserData();
-    }, []);
-    return {loadingUser};
+  }, []);
 };
 
 export default useUserData;

@@ -1,15 +1,14 @@
-import React from "react";
+import React,{useState} from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import "../styles/Landing.css";
+import LoadingSpinner from "../components/LoadingSpinner";
 import angryPingu from "../images/PinguIcons/angryPingu.png";
 import happyPingu from "../images/PinguIcons/happyPingu.png";
-import happyWalkPingu from "../images/PinguIcons/happyWalkPingu.png";
 import excitedPingu from "../images/PinguIcons/excitedPingu.png";
-import LoadingSpinner from "../components/LoadingSpinner";
+import "../styles/Landing.css";
 const LandingPage = () => {
   const [t] = useTranslation("mainPages");
-  const [isLoadingGuestLogin, setIsLoadingGuestLogin] = React.useState(false);
+  const [isLoadingGuestLogin, setIsLoadingGuestLogin] = useState(false);
   const navigate = useNavigate();
   const guestLogin = async () => {
     try{
@@ -23,6 +22,7 @@ const LandingPage = () => {
         credentials: 'include',
       });
       if (!response.ok) {
+        setIsLoadingGuestLogin(false);
         console.log(response);
         throw new Error(`HTTP error! status: ${response.statusText}`);
       }
@@ -34,6 +34,7 @@ const LandingPage = () => {
         navigate("/home");
       }
     }catch(error){
+      setIsLoadingGuestLogin(false);
       console.error("Fetch error:", error);
     }
     

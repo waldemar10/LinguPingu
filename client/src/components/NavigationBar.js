@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../context/LanguageContext";
 import Flag from "react-world-flags";
 import useUserData from "../hooks/useUserData";
-
+import LoadingSpinner from "./LoadingSpinner";
 const NavigationBar = () => {
   // * The UserContext is used to access the user data.
   const {
@@ -15,6 +15,8 @@ const NavigationBar = () => {
     setUsername,
     profilePicture64,
     setProfilePicture64,
+    setProfilePicture512,
+    setBiography,
   } = useContext(UserContext);
   const {
     setAppLanguage,
@@ -24,19 +26,18 @@ const NavigationBar = () => {
     nativeLanguage,
     learningLanguage,
   } = useContext(LanguageContext);
-  // * The state of the Navbar is used to determine whether the Navbar is expanded or not.
-  const [isExpanded, setIsExpanded] = useState(false);
-  // * The navbarNavRef is used to access the navbarNav element.
-  const navbarNavRef = useRef(null);
 
+  const navbarNavRef = useRef(null);
   const [tp, i18next] = useTranslation("mainPages");
   const requiredKeys = ["username", "learningLanguages", "nativeLanguage"];
+
   const isSessionStorageEmpty = requiredKeys.some(
     (key) => !sessionStorage.getItem(key)
   );
-
   const isLocalStorageEmpty = !localStorage.getItem("LinguPingu_appLanguage");
+
   useUserData(isSessionStorageEmpty || isLocalStorageEmpty);
+
   const toggleLanguage = (appLanguage) => {
     if (!username) return;
     if (!appLanguage) return;
@@ -49,13 +50,19 @@ const NavigationBar = () => {
     setAppLanguage(i18next.language);
     localStorage.setItem("LinguPingu_appLanguage", i18next.language);
   };
-  
+
   useEffect(() => {
+    if (isLocalStorageEmpty && isSessionStorageEmpty) return;
+
     if (!isSessionStorageEmpty) {
       setUsername(sessionStorage.getItem("username"));
       setProfilePicture64(sessionStorage.getItem("profilePicture64"));
+      setProfilePicture512(sessionStorage.getItem("profilePicture512"));
+      setBiography(sessionStorage.getItem("biography"));
       setLearningLanguage(sessionStorage.getItem("learningLanguages"));
       setNativeLanguage(sessionStorage.getItem("nativeLanguage"));
+    }
+    if (!isLocalStorageEmpty) {
       setAppLanguage(localStorage.getItem("LinguPingu_appLanguage"));
     }
   }, []);
@@ -106,10 +113,7 @@ const NavigationBar = () => {
             </li>
           </ul>
         </div>
-        <div
-          className={`d-flex align-items-center ml-auto ${
-            isExpanded ? "d-none" : ""
-          }`}>
+        <div className="d-flex align-items-center ml-auto">
           <div
             className="d-flex align-items-center me-3"
             onClick={() => toggleLanguage(appLanguage)}

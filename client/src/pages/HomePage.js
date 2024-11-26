@@ -3,7 +3,7 @@ import { LanguageContext } from "../context/LanguageContext";
 import { Link } from "react-router-dom";
 import NavigationBar from "../components/NavigationBar";
 import { useTranslation } from "react-i18next";
-import useUserData from "../hooks/useUserData";
+import { UserContext } from "../context/UserContext";
 import { Slogans } from "../utils/slogansUtils";
 import LoadingSpinner from "../components/LoadingSpinner";
 
@@ -13,24 +13,9 @@ import "../styles/Home.css";
 const HomePage = () => {
   const [t] = useTranslation("mainPages");
   const [randomSlogan, setRandomSlogan] = useState("");
-  const {
-    appLanguage,
-    setAppLanguage,
-    setLearningLanguage,
-    setNativeLanguage,
-  } = useContext(LanguageContext);
-
-  const requiredSessionStorageKeys = [
-    "username",
-    "learningLanguages",
-    "nativeLanguage",
-  ];
-  const isSessionStorageEmpty = requiredSessionStorageKeys.some(
-    (key) => !sessionStorage.getItem(key)
-  );
-
-  const { loadingUser } = useUserData(isSessionStorageEmpty);
-
+  const { appLanguage } = useContext(LanguageContext);
+  const { isLoadingUser } = useContext(UserContext);
+  
   const setSlogan = () => {
     if (!Slogans[appLanguage]) return;
     const selectedSlogans = Slogans[appLanguage];
@@ -38,23 +23,14 @@ const HomePage = () => {
       selectedSlogans[Math.floor(Math.random() * selectedSlogans.length)]
     );
   };
-  const setSessionStorage = () => {
-    if (!isSessionStorageEmpty) {
-      setLearningLanguage(sessionStorage.getItem("learningLanguages"));
-      setNativeLanguage(sessionStorage.getItem("nativeLanguage"));
-      setAppLanguage(localStorage.getItem("LinguPingu_appLanguage"));
-    }
-  };
 
   useEffect(() => {
-    setSessionStorage();
     setSlogan();
   }, [appLanguage]);
 
-  if (loadingUser) {
+  if (isLoadingUser) {
     return <LoadingSpinner />;
   }
-
   return (
     <>
       <div className="d-flex flex-column justify-content-center align-items-center g-0">

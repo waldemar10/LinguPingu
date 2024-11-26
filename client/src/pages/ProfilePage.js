@@ -1,59 +1,34 @@
 import { useContext, useState, useEffect } from "react";
 import { UserContext } from "../context/UserContext";
+import { LanguageContext } from "../context/LanguageContext";
 import NavigationBar from "../components/NavigationBar";
 import Flag from "react-world-flags";
 import { Container, Row, Col, Image } from "react-bootstrap";
 import { FaEdit } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import UserService from "../services/UserService";
 import LoadingSpinner from "../components/LoadingSpinner";
-
 function ProfilePage() {
   const [t] = useTranslation("profile");
   const [isEditing, setIsEditing] = useState(false);
-  const [username, setUsername] = useState();
-  const [country, setCountry] = useState();
-  const [biography, setBiography] = useState();
-  const [learningLanguage, setLearningLanguage] = useState();
-  const [nativeLanguage, setNativeLanguage] = useState();
-  const [profilePicture512,setProfilePicture512] = useState();
-  const [loadingUser, setLoadingUser] = useState(true);
-  const navigate = useNavigate();
+  const [learningLanguageProfile, setLearningLanguageProfile] = useState();
+  const {
+    isLoadingUser,
+    username,
+    biography,
+    setBiography,
+    country,
+    profilePicture512,
+  } = useContext(UserContext);
+  const { learningLanguage, nativeLanguage } = useContext(LanguageContext);
+  useEffect(() => {
+    setLearningLanguageProfile(learningLanguage);
+    if (learningLanguage === "en") setLearningLanguageProfile("gb");
+  }, [learningLanguage]);
 
   const handleEditClick = () => {
     setIsEditing(true);
   };
-
-  const fetchUserData = async () => {
-      setLoadingUser(true);
-    try {
-      UserService.getUser().then((res) => {
-        const data = res.data;
-        setUsername(data.username);
-        setBiography(data.biography);
-        setProfilePicture512(data.profilePicture512);
-        setCountry(data.country);
-        setLearningLanguage(data.learningLanguages);
-        setNativeLanguage(data.nativeLanguage);
-      }).catch((error) => {
-        if (error.response.status === 401) {
-          navigate("/landing");
-        }
-        console.error("Fehler:", error);
-      });
-     
-    } catch (error) {
-      console.error("Fetch error:", error);
-    } finally {
-      setLoadingUser(false);
-    }
-  };
-  useEffect(() => {
-    fetchUserData();
-  }, []);
-
-  
 
   const handleSaveClick = async (event) => {
     event.preventDefault();
@@ -63,19 +38,21 @@ function ProfilePage() {
     try {
       const data = {
         username: username,
-        biography: biography
+        biography: biography,
       };
-      UserService.updateBiography(data).then(() => {
-        console.log("Erfolgreich gespeichert");
-      }).catch((error) => {
-        console.error("Fehler:", error);
-      });
-
+      UserService.updateBiography(data)
+        .then(() => {
+          console.log("Erfolgreich gespeichert");
+        })
+        .catch((error) => {
+          console.error("Fehler:", error);
+        });
     } catch (error) {
       console.error("Fehler:", error);
     }
   };
-  if (loadingUser) {
+
+  if (isLoadingUser) {
     return <LoadingSpinner />;
   }
   return (
@@ -166,14 +143,12 @@ function ProfilePage() {
               <div className="d-flex flex-column align-items-center justify-content-center m-3">
                 <h3 className="mt-3">{t("nativeLanguages")}</h3>
                 <div className="d-flex flex-row align-items-center justify-content-center">
-                  
-                    <Flag
-                      key={nativeLanguage}
-                      code={nativeLanguage}
-                      height="32"
-                      style={{ margin: "0 5px" }}
-                    />
-               
+                  <Flag
+                    key={nativeLanguage}
+                    code={nativeLanguage}
+                    height="32"
+                    style={{ margin: "0 5px" }}
+                  />
                 </div>
               </div>
             </Col>
@@ -186,14 +161,12 @@ function ProfilePage() {
               <div className="d-flex flex-column align-items-center justify-content-center">
                 <h3 className="mt-3">{t("learningLanguages")}</h3>
                 <div className="d-flex flex-row align-items-center justify-content-center">
-               
-                    <Flag
-                      key={learningLanguage}
-                      code={learningLanguage}
-                      height="32"
-                      style={{ margin: "0 5px" }}
-                    />
-              
+                  <Flag
+                    key={learningLanguageProfile}
+                    code={learningLanguageProfile}
+                    height="32"
+                    style={{ margin: "0 5px" }}
+                  />
                 </div>
               </div>
             </Col>

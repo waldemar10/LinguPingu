@@ -8,6 +8,7 @@ export const UserProvider = ({ children }) => {
   const [biography, setBiography] = useState(null);
   const [profilePicture64,setProfilePicture64] = useState(null);
   const [profilePicture512,setProfilePicture512] = useState(null);
+  const [isLoadingUser,setIsLoadingUser] = useState(false);
   const logout = async () => {
     try {
       await fetch(`${process.env.REACT_APP_SERVER_URI}/logout`, {
@@ -22,6 +23,6 @@ export const UserProvider = ({ children }) => {
 
   return (
     <UserContext.Provider value={{ logout, id ,setId,username,setUsername,country,setCountry,biography,setBiography,
-      profilePicture64,setProfilePicture64, profilePicture512,setProfilePicture512 }}>{children}</UserContext.Provider>
+      profilePicture64,setProfilePicture64, profilePicture512,setProfilePicture512,isLoadingUser,setIsLoadingUser }}>{children}</UserContext.Provider>
   );
 };
