@@ -1,10 +1,9 @@
 import React,{useEffect} from "react";
 import { Link } from "react-router-dom";
 import NavigationBar from "../components/NavigationBar";
-
 import excitedPingu from "../images/PinguIcons/excitedPingu.png";
-import "../styles/Home.css";
 import { useNavigate } from "react-router-dom";
+import "../styles/Home.css";
 const GamesPage = () => {
   const navigate = useNavigate();
   const fetchProtectedData = async () => {

@@ -7,7 +7,7 @@ const LoadingSpinner = () => {
         className="spinner-border text-primary "
         style={{ width: "6rem", height: "6rem" }}></div>
       <p className="text-light">Loading Data...</p>
-      <p>Es kann bis zur einer Minute dauern.</p>
+      <p>Es kann paar Minuten dauern...</p>
     </div>
   );
 };

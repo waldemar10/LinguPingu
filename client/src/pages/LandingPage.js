@@ -1,7 +1,7 @@
 import React,{useState} from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import LoadingSpinner from "../components/LoadingSpinner";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 import angryPingu from "../images/PinguIcons/angryPingu.png";
 import happyPingu from "../images/PinguIcons/happyPingu.png";
 import excitedPingu from "../images/PinguIcons/excitedPingu.png";

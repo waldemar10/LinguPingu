@@ -5,7 +5,7 @@ import NavigationBar from "../components/NavigationBar";
 import { useTranslation } from "react-i18next";
 import { UserContext } from "../context/UserContext";
 import { Slogans } from "../utils/slogansUtils";
-import LoadingSpinner from "../components/LoadingSpinner";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 
 import happyPingu from "../images/PinguIcons/happyPingu.png";
 import "../styles/Home.css";

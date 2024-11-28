@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import countries from "i18n-iso-countries";
 import langs from "langs";
 import Select from "react-select";
-import LoadingSpinner from "./LoadingSpinner";
+import LoadingSpinner from "./common/LoadingSpinner";
 import "../styles/ProfilePage.css";
 
 countries.registerLocale(require("i18n-iso-countries/langs/de.json"));

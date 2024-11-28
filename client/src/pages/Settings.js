@@ -8,7 +8,7 @@ import Select from "react-select";
 
 
 import UserService from "../services/UserService";
-import LoadingSpinner from "../components/LoadingSpinner";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 import "../styles/ProfilePage.css";
 countries.registerLocale(require("i18n-iso-countries/langs/de.json"));
 countries.registerLocale(require("i18n-iso-countries/langs/en.json"));

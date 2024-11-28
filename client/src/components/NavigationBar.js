@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { LanguageContext } from "../context/LanguageContext";
 import Flag from "react-world-flags";
 import useUserData from "../hooks/useUserData";
-import LoadingSpinner from "./LoadingSpinner";
+import LoadingSpinner from "./common/LoadingSpinner";
 const NavigationBar = () => {
   // * The UserContext is used to access the user data.
   const {

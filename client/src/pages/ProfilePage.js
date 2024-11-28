@@ -7,7 +7,7 @@ import { Container, Row, Col, Image } from "react-bootstrap";
 import { FaEdit } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import UserService from "../services/UserService";
-import LoadingSpinner from "../components/LoadingSpinner";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 function ProfilePage() {
   const [t] = useTranslation("profile");
   const [isEditing, setIsEditing] = useState(false);

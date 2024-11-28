@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import LoadingSpinner from "./LoadingSpinner";
+import LoadingSpinner from "./common/LoadingSpinner";
 /**
  *
  * @returns {JSX.Element} - Das Login-Formular.

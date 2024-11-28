@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { LanguageContext } from "../../context/LanguageContext";
 import NavigationBar from "../../components/NavigationBar";
 import NavigationTabs from "../../components/NavigationTabs";
-import LoadingSpinner from "../../components/LoadingSpinner";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { useTranslation } from "react-i18next";
 import GrammarService from "../../services/GrammarService";
 import { DataContext } from "../../context/DataContext";
