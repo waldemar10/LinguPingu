@@ -10,13 +10,13 @@ const helmet = require('helmet');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 
-const vocabularyController = require("./controllers/VocabularyController");
-const vocabularyCollectionController = require("./controllers/VocabularyCollectionController");
-const lessonController = require("./controllers/LessonController");
-const grammarController = require("./controllers/GrammarController");
-const userController = require("./controllers/UserController");
-const tagController = require("./controllers/TagController");
-const authController = require("./controllers/AuthController");
+const vocabularyController = require("./controllers/vocabularyController");
+const vocabularyCollectionController = require("./controllers/vocabularyCollectionController");
+const lessonController = require("./controllers/lessonController");
+const grammarController = require("./controllers/grammarController");
+const userController = require("./controllers/userController");
+const tagController = require("./controllers/tagController");
+const authController = require("./controllers/authController");
 const app = express();
 const PORT = process.env.PORT || 5000; 
 
