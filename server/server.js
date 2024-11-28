@@ -16,7 +16,7 @@ const lessonController = require("./controllers/lessonController");
 const grammarController = require("./controllers/grammarController");
 const userController = require("./controllers/userController");
 const tagController = require("./controllers/tagController");
-const authController = require("./controllers/authController");
+const authController = require("./controllers/AuthController");
 const app = express();
 const PORT = process.env.PORT || 5000; 
 
